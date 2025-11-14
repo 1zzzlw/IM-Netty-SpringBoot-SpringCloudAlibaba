@@ -1,0 +1,65 @@
+package com.zzzlew.zzzimserver.utils;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
+import com.zzzlew.zzzimserver.pojo.dto.user.UserBaseDTO;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static com.zzzlew.zzzimserver.constant.RedisConstant.LOGIN_USER_KEY;
+import static com.zzzlew.zzzimserver.constant.RedisConstant.LOGIN_USER_KEY_TTL;
+
+/**
+ * @Auther: zzzlew
+ * @Date: 2025/11/12 - 11 - 12 - 16:38
+ * @Description: com.zzzlew.zzzimserver.utils
+ * @version: 1.0
+ */
+@Component
+public class RefreshTokenInterceptor implements HandlerInterceptor {
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+        throws Exception {
+        // 获取请求头中的token
+        String token = request.getHeader("Authorization");
+        // 检查token是否为空
+        if (StrUtil.isBlank(token)) {
+            // 只做刷新token在redis中的过期时间操作，不做拦截
+            return true;
+        }
+        // redis中键的格式为：login:user:token
+        String tokenKey = LOGIN_USER_KEY + token;
+        // 从redis信息中获取用户信息
+        Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(tokenKey);
+        // 检查用户信息是否为空,如果为空,说明token过期,只做刷新token在redis中的过期时间操作,不做拦截
+        if (userMap.isEmpty()) {
+            // 只做刷新token在redis中的过期时间操作，不做拦截
+            return true;
+        }
+        // 将用户信息转为用户基本信息DTO UserBaseDTO
+        UserBaseDTO userBaseDTO = BeanUtil.copyProperties(userMap, UserBaseDTO.class);
+        // 将用户信息存储到ThreadLocal中
+        UserHolder.save(userBaseDTO);
+        // 刷新token在redis中的过期时间
+        stringRedisTemplate.expire(tokenKey, LOGIN_USER_KEY_TTL, TimeUnit.MINUTES);
+        return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
+        throws Exception {
+        // 移除ThreadLocal中的用户信息
+        UserHolder.removeUser();
+    }
+}
