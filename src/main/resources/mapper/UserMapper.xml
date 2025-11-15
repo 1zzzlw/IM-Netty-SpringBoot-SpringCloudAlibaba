@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.zzzlew.zzzimserver.mapper.UserMapper">
 
-    <insert id="insertUserAuth">
+    <insert id="insertUserAuth" useGeneratedKeys="true" keyProperty="id">
         insert into user_auth (user_id, username, account, password, avatar)
         values (#{userId}, #{username}, #{account}, #{password}, #{avatar})
     </insert>

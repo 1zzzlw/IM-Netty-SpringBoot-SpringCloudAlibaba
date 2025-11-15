@@ -11,4 +11,9 @@
         where f.user_id = #{userId}
     </select>
 
+    <insert id="addFriendToRelation">
+        insert into friend_relation (user_id, friend_id)
+        values (#{toUserId}, #{fromUserId})
+    </insert>
+
 </mapper>

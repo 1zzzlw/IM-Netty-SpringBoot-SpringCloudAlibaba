@@ -19,4 +19,12 @@ public interface FriendMapper {
      */
     List<FriendRelationVO> selectFriendList(Long userId);
 
+    /**
+     * 添加好友关系
+     * 
+     * @param toUserId 被添加好友用户ID
+     * @param fromUserId 添加好友用户ID
+     */
+    void addFriendToRelation(Long toUserId, Long fromUserId);
+
 }

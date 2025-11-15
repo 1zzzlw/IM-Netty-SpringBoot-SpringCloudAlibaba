@@ -1,6 +1,7 @@
 package com.zzzlew.zzzimserver.server;
 
-import com.zzzlew.zzzimserver.pojo.dto.friend.ApplyDTO;
+import com.zzzlew.zzzimserver.pojo.dto.Apply.DealApplyDTO;
+import com.zzzlew.zzzimserver.pojo.dto.Apply.SendApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.user.ApplyVO;
 
 import java.util.List;
@@ -16,9 +17,9 @@ public interface ApplyService {
     /**
      * 发送好友申请
      * 
-     * @param applyDTO 好友申请信息
+     * @param sendApplyDTO 好友申请信息
      */
-    void sendApply(ApplyDTO applyDTO);
+    void sendApply(SendApplyDTO sendApplyDTO);
 
     /**
      * 获取好友申请列表
@@ -26,5 +27,12 @@ public interface ApplyService {
      * @return 好友申请列表
      */
     List<ApplyVO> getApplyList();
+
+    /**
+     * 同意好友申请
+     * 
+     * @param dealApplyDTO 好友申请信息
+     */
+    void dealApply(DealApplyDTO dealApplyDTO);
 
 }

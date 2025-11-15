@@ -1,6 +1,7 @@
 package com.zzzlew.zzzimserver.controller;
 
-import com.zzzlew.zzzimserver.pojo.dto.friend.ApplyDTO;
+import com.zzzlew.zzzimserver.pojo.dto.Apply.DealApplyDTO;
+import com.zzzlew.zzzimserver.pojo.dto.Apply.SendApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.user.ApplyVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.ApplyService;
@@ -24,23 +25,48 @@ public class ApplyController {
     @Resource
     private ApplyService applyService;
 
+    /**
+     * 发送好友申请
+     * 
+     * @param sendApplyDTO 好友申请信息
+     */
     @PostMapping("/send")
-    public Result<Object> sendApply(@RequestBody ApplyDTO applyDTO) {
-        log.info("添加好友，申请信息：{}", applyDTO);
-        applyService.sendApply(applyDTO);
+    public Result<Object> sendApply(@RequestBody SendApplyDTO sendApplyDTO) {
+        log.info("添加好友，申请信息：{}", sendApplyDTO);
+        applyService.sendApply(sendApplyDTO);
         return Result.success();
     }
 
+    /**
+     * 获取好友申请发送历史
+     * 
+     * @return 好友申请发送历史
+     */
+    @GetMapping("/sendHistory")
+    public Result<Object> getSendHistory() {
+        return Result.success();
+    }
+
+    /**
+     * 获取好友申请列表
+     * 
+     * @return 好友申请列表
+     */
     @GetMapping("/list")
     public Result<List<ApplyVO>> getApplyList() {
         List<ApplyVO> applyList = applyService.getApplyList();
         return Result.success(applyList);
     }
 
-    @PostMapping("/agree")
-    public Result<Object> agreeApply(@RequestBody ApplyDTO applyDTO) {
-        log.info("同意好友申请，申请信息：{}", applyDTO);
-        // applyService.agreeApply(applyDTO);
+    /**
+     * 处理好友申请
+     * 
+     * @param dealApplyDTO 好友申请处理信息
+     */
+    @PostMapping("/deal")
+    public Result<Object> dealApply(@RequestBody DealApplyDTO dealApplyDTO) {
+        log.info("处理好友申请，申请信息为：{}", dealApplyDTO);
+        applyService.dealApply(dealApplyDTO);
         return Result.success();
     }
 

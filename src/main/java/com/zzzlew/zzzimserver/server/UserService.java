@@ -18,7 +18,7 @@ public interface UserService {
 
     void createCode(HttpServletResponse response);
 
-    void register(UserRegisterDTO userRegisterDTO);
+    String register(UserRegisterDTO userRegisterDTO);
 
     String createPhoneCode(String phone);
 

@@ -1,14 +1,18 @@
 package com.zzzlew.zzzimserver.server.impl;
 
 import com.zzzlew.zzzimserver.mapper.ApplyMapper;
-import com.zzzlew.zzzimserver.pojo.dto.friend.ApplyDTO;
+import com.zzzlew.zzzimserver.mapper.FriendMapper;
+import com.zzzlew.zzzimserver.pojo.dto.Apply.DealApplyDTO;
+import com.zzzlew.zzzimserver.pojo.dto.Apply.SendApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.user.ApplyVO;
 import com.zzzlew.zzzimserver.server.ApplyService;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -23,14 +27,16 @@ public class ApplyServiceImpl implements ApplyService {
 
     @Resource
     private ApplyMapper applyMapper;
+    @Resource
+    private FriendMapper friendMapper;
 
     @Override
-    public void sendApply(ApplyDTO applyDTO) {
+    public void sendApply(SendApplyDTO sendApplyDTO) {
         // 获得当前登录用户id
         Long userId = UserHolder.getUser().getId();
         log.info("当前登录用户id：{}", userId);
-        applyDTO.setFromUserId(userId);
-        applyMapper.sendApply(applyDTO);
+        sendApplyDTO.setFromUserId(userId);
+        applyMapper.sendApply(sendApplyDTO);
     }
 
     @Override
@@ -41,6 +47,25 @@ public class ApplyServiceImpl implements ApplyService {
         List<ApplyVO> list = applyMapper.getApplyList(userId);
         log.info("好友申请列表: {}", list);
         return list;
+    }
+
+    @Transactional
+    @Override
+    public void dealApply(DealApplyDTO dealApplyDTO) {
+        LocalDateTime dealTime = LocalDateTime.now();
+        dealApplyDTO.setDealTime(dealTime);
+        applyMapper.dealApply(dealApplyDTO);
+        // 如果同意好友申请，需要添加好友到好友列表
+        if (dealApplyDTO.getDealResult() == 1) {
+            // TODO 增加 “幂等性处理”（避免重复添加好友）
+            // 获得当前登录用户id
+            Long toUserId = UserHolder.getUser().getId();
+            Long fromUserId = dealApplyDTO.getFromUserId();
+
+            // 插入好友关系表
+            friendMapper.addFriendToRelation(toUserId, fromUserId);
+            friendMapper.addFriendToRelation(fromUserId, toUserId);
+        }
     }
 
 }

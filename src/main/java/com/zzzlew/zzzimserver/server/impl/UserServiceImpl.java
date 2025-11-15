@@ -80,6 +80,125 @@ public class UserServiceImpl implements UserService {
             throw new PasswordErrorException(MessageConstant.VERIFYCODE_ERROR);
         }
 
+        // 生成并存储token
+        UserLoginVO userLoginVO = generateAndStoreWithUpdateToken(userAuth);
+
+        return userLoginVO;
+    }
+
+    /**
+     * 处理用户登录界面获取验证码的操作
+     * 
+     * @param response HttpServletResponse对象
+     */
+    @Override
+    public void createCode(HttpServletResponse response) {
+        // 生成验证码文本
+        String code = KaptchaConfig.kaptchaProducer().createText();
+        // 生成验证码图片
+        BufferedImage captchaImage = KaptchaConfig.kaptchaProducer().createImage(code);
+
+        // 将验证码信息存入到redis中
+        stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY, code, LOGIN_CODE_TTL, TimeUnit.MINUTES);
+
+        log.info("生成的验证为：{}", code);
+
+        // 设置响应内容类型，告诉浏览器“这次返回的是 JPEG 图片”
+        response.setContentType("image/jpeg");
+
+        // 禁止浏览器缓存验证码（避免刷新后还是旧图片）
+        response.setHeader("Cache-Control", "no-store, no-cache");
+        // 兼容老浏览器
+        response.setHeader("Pragma", "no-cache");
+
+        // 获取字节输出流，向客户端发送数据，把 BufferedImage（内存图片）转成二进制流，写进响应
+        try (OutputStream os = response.getOutputStream()) {
+            // ImageIO.write：把图片写入输出流，格式是 jpeg
+            ImageIO.write(captchaImage, "jpeg", os);
+            // 确保流里的数据全发送给前端
+            os.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 处理用户注册时点击注册的操作
+     * 
+     * @param userRegisterDTO 用户注册信息
+     */
+    @Transactional
+    @Override
+    public String register(UserRegisterDTO userRegisterDTO) {
+        // 随机生成一个不会重复的账号
+        long timestamp = System.currentTimeMillis();
+        String randomStr = RandomUtil.randomString(4);
+        int randomNum = new Random().nextInt(90) + 10;
+        String account = timestamp + randomStr + randomNum;
+
+        userRegisterDTO.setAccount(account);
+
+        UserInfo userInfo = BeanUtil.copyProperties(userRegisterDTO, UserInfo.class);
+
+        userInfoMapper.insertUserInfo(userInfo);
+
+        // 获取insert语句生成的用户详细信息表中的主键
+        Long userId = userInfo.getId();
+
+        UserAuth userAuth = BeanUtil.copyProperties(userRegisterDTO, UserAuth.class);
+        userAuth.setUserId(userId);
+        userMapper.insertUserAuth(userAuth);
+        log.info("主要用户信息：{}", userAuth);
+        // 生成并存储用户登录信息在redis中
+        UserLoginVO userLoginVO = generateAndStoreWithUpdateToken(userAuth);
+        return userLoginVO.getToken();
+    }
+
+    /**
+     * 处理用户注册时点击获取验证码的操作
+     * 
+     * @param phone 手机号
+     * @return 验证码
+     */
+    @Override
+    public String createPhoneCode(String phone) {
+        // 校验手机号格式
+        if (RegexUtils.isPhoneInvalid(phone)) {
+            throw new PhoneErrorException(MessageConstant.PHONE_ERROR);
+        }
+
+        // 查询数据库，看手机号是否存在
+        // TODO 后期可以加上redis缓存，避免频繁查询数据库
+        boolean exists = userInfoMapper.getByPhone(phone);
+        if (exists) {
+            throw new PhoneAlreadyExistsException(MessageConstant.PHONE_ALREADY_EXISTS);
+        }
+
+        // 随机生成验证码
+        String code = RandomUtil.randomNumbers(6);
+        // 将验证码存入到redis中
+        String codeKey = REGISTER_CODE_KEY + phone;
+        stringRedisTemplate.opsForValue().set(codeKey, code, REGISTER_CODE_TTL, TimeUnit.MINUTES);
+        log.info("随机生成的验证码为：{}", code);
+        return code;
+    }
+
+    /**
+     * 处理待登录界面点击确认登录的操作
+     *
+     * @param token 登录时生成的token
+     */
+    @Override
+    public void pendingLogin(String token) {
+        // 校验token是否存在
+        String tokenInfoKey = LOGIN_USER_KEY + token;
+        Boolean hasKey = stringRedisTemplate.hasKey(tokenInfoKey);
+        if (!hasKey) {
+            throw new TokenNotFoundException(MessageConstant.TOKEN_NOT_FOUND);
+        }
+    }
+
+    public UserLoginVO generateAndStoreWithUpdateToken(UserAuth userAuth) {
         // 生成Token令牌并返回
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtClaimsConstant.USER_ID, userAuth.getId());
@@ -128,92 +247,5 @@ public class UserServiceImpl implements UserService {
         stringRedisTemplate.expire(tokenKey, LOGIN_USER_KEY_TTL, TimeUnit.MINUTES);
 
         return userLoginVO;
-    }
-
-    @Override
-    public void createCode(HttpServletResponse response) {
-        // 生成验证码文本
-        String code = KaptchaConfig.kaptchaProducer().createText();
-        // 生成验证码图片
-        BufferedImage captchaImage = KaptchaConfig.kaptchaProducer().createImage(code);
-
-        // 将验证码信息存入到redis中
-        stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY, code, LOGIN_CODE_TTL, TimeUnit.MINUTES);
-
-        log.info("生成的验证为：{}", code);
-
-        // 设置响应内容类型，告诉浏览器“这次返回的是 JPEG 图片”
-        response.setContentType("image/jpeg");
-
-        // 禁止浏览器缓存验证码（避免刷新后还是旧图片）
-        response.setHeader("Cache-Control", "no-store, no-cache");
-        // 兼容老浏览器
-        response.setHeader("Pragma", "no-cache");
-
-        // 获取字节输出流，向客户端发送数据，把 BufferedImage（内存图片）转成二进制流，写进响应
-        try (OutputStream os = response.getOutputStream()) {
-            // ImageIO.write：把图片写入输出流，格式是 jpeg
-            ImageIO.write(captchaImage, "jpeg", os);
-            // 确保流里的数据全发送给前端
-            os.flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Transactional
-    @Override
-    public void register(UserRegisterDTO userRegisterDTO) {
-        // 随机生成一个不会重复的账号
-        long timestamp = System.currentTimeMillis();
-        String randomStr = RandomUtil.randomString(4);
-        int randomNum = new Random().nextInt(90) + 10;
-        String account = timestamp + randomStr + randomNum;
-
-        userRegisterDTO.setAccount(account);
-
-        UserInfo userInfo = BeanUtil.copyProperties(userRegisterDTO, UserInfo.class);
-
-        userInfoMapper.insertUserInfo(userInfo);
-
-        // 获取insert语句生成的用户详细信息表中的主键
-        Long userId = userInfo.getId();
-
-        UserAuth userAuth = BeanUtil.copyProperties(userRegisterDTO, UserAuth.class);
-        userAuth.setUserId(userId);
-        userMapper.insertUserAuth(userAuth);
-    }
-
-    @Override
-    public String createPhoneCode(String phone) {
-        // 校验手机号格式
-        if (RegexUtils.isPhoneInvalid(phone)) {
-            throw new PhoneErrorException(MessageConstant.PHONE_ERROR);
-        }
-
-        // 查询数据库，看手机号是否存在
-        // TODO 后期可以加上redis缓存，避免频繁查询数据库
-        boolean exists = userInfoMapper.getByPhone(phone);
-        if (exists) {
-            throw new PhoneAlreadyExistsException(MessageConstant.PHONE_ALREADY_EXISTS);
-        }
-
-        // 随机生成验证码
-        String code = RandomUtil.randomNumbers(6);
-        // 将验证码存入到redis中
-        String codeKey = REGISTER_CODE_KEY + phone;
-        stringRedisTemplate.opsForValue().set(codeKey, code, REGISTER_CODE_TTL, TimeUnit.MINUTES);
-        log.info("随机生成的验证码为：{}", code);
-        return code;
-    }
-
-    @Override
-    public void pendingLogin(String token) {
-        // 校验token是否存在
-        String tokenInfoKey = LOGIN_USER_KEY + token;
-        Boolean hasKey = stringRedisTemplate.hasKey(tokenInfoKey);
-        if (!hasKey) {
-            throw new TokenNotFoundException(MessageConstant.TOKEN_NOT_FOUND);
-        }
     }
 }

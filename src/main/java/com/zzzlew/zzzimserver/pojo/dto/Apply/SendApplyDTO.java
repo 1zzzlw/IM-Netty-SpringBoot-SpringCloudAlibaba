@@ -1,4 +1,4 @@
-package com.zzzlew.zzzimserver.pojo.dto.friend;
+package com.zzzlew.zzzimserver.pojo.dto.Apply;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import java.io.Serializable;
  * @version: 1.0
  */
 @Data
-public class ApplyDTO implements Serializable {
+public class SendApplyDTO implements Serializable {
 
     private Long fromUserId;
 

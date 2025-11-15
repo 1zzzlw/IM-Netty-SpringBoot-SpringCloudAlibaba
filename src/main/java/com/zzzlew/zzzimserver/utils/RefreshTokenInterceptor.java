@@ -6,6 +6,7 @@ import com.zzzlew.zzzimserver.pojo.dto.user.UserBaseDTO;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -22,6 +23,7 @@ import static com.zzzlew.zzzimserver.constant.RedisConstant.LOGIN_USER_KEY_TTL;
  * @Description: com.zzzlew.zzzimserver.utils
  * @version: 1.0
  */
+@Slf4j
 @Component
 public class RefreshTokenInterceptor implements HandlerInterceptor {
 
@@ -33,6 +35,7 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         throws Exception {
         // 获取请求头中的token
         String token = request.getHeader("Authorization");
+        log.info("请求头中的token为：{}", token);
         // 检查token是否为空
         if (StrUtil.isBlank(token)) {
             // 只做刷新token在redis中的过期时间操作，不做拦截

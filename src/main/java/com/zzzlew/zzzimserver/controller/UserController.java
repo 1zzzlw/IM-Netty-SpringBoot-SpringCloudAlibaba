@@ -24,8 +24,8 @@ public class UserController {
     @PostMapping("/register")
     public Result<Object> register(@RequestBody UserRegisterDTO userRegisterDTO) {
         log.info("注册用户信息为 {}", userRegisterDTO);
-        userService.register(userRegisterDTO);
-        return Result.success();
+        String token = userService.register(userRegisterDTO);
+        return Result.success(token);
     }
 
     @PostMapping("/phoneCode")
