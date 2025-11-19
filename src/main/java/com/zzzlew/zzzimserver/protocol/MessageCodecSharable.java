@@ -52,6 +52,8 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> list) throws Exception {
+        log.info("MessageCodecSharable开始解码，可读字节: {}", byteBuf.readableBytes());
+
         // 1. 先读取魔数 4 个字节
         int magicNum = byteBuf.readInt();
         // 2. 读取 1 个字节的版本号
@@ -77,6 +79,7 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
         // 根据消息类型来反序列化字节数组为对应的消息类型
         Object message = algorithm.deserialize(messageClass, bytes);
         // 7. 将反序列化后的消息添加到 list 中
+        log.info("MessageCodecSharable解码完成，消息类型: {}, 序列号: {}", messageType, sequenceId);
         list.add(message);
     }
 }

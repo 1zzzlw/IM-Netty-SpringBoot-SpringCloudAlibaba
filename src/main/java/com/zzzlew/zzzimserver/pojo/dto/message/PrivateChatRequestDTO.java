@@ -12,8 +12,8 @@ import java.io.Serializable;
  * @Description: com.zzzlew.zzzimserver.pojo.dto.message
  * @version: 1.0
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class PrivateChatRequestDTO extends Message implements Serializable {
 
     private String conversationId;

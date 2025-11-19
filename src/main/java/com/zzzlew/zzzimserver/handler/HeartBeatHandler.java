@@ -28,13 +28,10 @@ public class HeartBeatHandler extends ChannelDuplexHandler {
                 // 处理读空闲事件
                 log.info("心跳超时（30秒未读），关闭连接：{}", ctx.channel().remoteAddress());
                 ctx.close();
-            } else if (e.state() == IdleState.WRITER_IDLE) {
-                // 处理写空闲事件
-                log.info("发送心跳包：{}", ctx.channel().remoteAddress());
-                ctx.writeAndFlush(new TextWebSocketFrame("heartbeat"));
             }
         }
         // 其他事件，继续传递
         ctx.fireUserEventTriggered(evt);
     }
+
 }

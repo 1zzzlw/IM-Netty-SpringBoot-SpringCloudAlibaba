@@ -1,7 +1,7 @@
 server:
   port: 8080
 serializer:
-  algorithm: json
+  algorithm: Json
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

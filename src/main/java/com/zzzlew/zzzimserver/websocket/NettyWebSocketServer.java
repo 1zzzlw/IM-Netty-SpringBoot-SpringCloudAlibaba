@@ -1,9 +1,8 @@
 package com.zzzlew.zzzimserver.websocket;
 
-import com.zzzlew.zzzimserver.handler.ConnectSuccessMessageHandler;
-import com.zzzlew.zzzimserver.handler.HeartBeatHandler;
-import com.zzzlew.zzzimserver.handler.HttpHeadersHandler;
-import com.zzzlew.zzzimserver.handler.QuitLoginHandler;
+import com.zzzlew.zzzimserver.handler.*;
+import com.zzzlew.zzzimserver.protocol.MessageCodecSharable;
+import com.zzzlew.zzzimserver.protocol.ProtocolFrameDecoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -76,19 +75,31 @@ public class NettyWebSocketServer {
                     ChannelPipeline pipeline = socketChannel.pipeline();
                     // websocket协议本身是基于http协议的，所以这边也要使用http解编码器
                     pipeline.addLast(new HttpServerCodec());
-                    // 用于处理 HTTP 消息的分块写入，确保数据按块发送 这个处理器在消息入站的时候不使用，因为消息入站的只是请求
-                    pipeline.addLast(new ChunkedWriteHandler());
                     // 将HTTP消息的多个部分聚合成完整的FullHttpRequest 确保收到完整的HTTP请求再处理 ，避免处理不完整的请求
                     // 这个处理器只在入站的时候处理
                     pipeline.addLast(new HttpObjectAggregator(64 * 1024));
+                    // 用于处理 HTTP 消息的分块写入，确保数据按块发送 这个处理器在消息入站的时候不使用，因为消息入站的只是请求
+                    pipeline.addLast(new ChunkedWriteHandler());
                     // 自定义 Http 处理头，用于处理 Http 头信息
                     pipeline.addLast(new HttpHeadersHandler());
+                    // 用于处理 WebSocket 协议的握手、升级和关闭，会自动处理 ping/pong 帧
                     pipeline.addLast(new WebSocketServerProtocolHandler("/ws", null, true, 65536, true, true, 10000L));
+                    // 用于将 BinaryWebSocketFrame 转换为 ByteBuf ，因为后续的处理器都需要 ByteBuf 类型的消息
+                    pipeline.addLast(new BinaryWebSocketFrameToByteBufHandler());
+                    // 自定义协议处理，WebSocket 升级完成后使用
+                    pipeline.addLast(new ProtocolFrameDecoder());
+                    // 出站转换处理器 - 必须放在所有出站消息处理之后，但在WebSocketServerProtocolHandler之前
+                    pipeline.addLast(new ByteBufToBinaryWebSocketFrameHandler());
+                    // 消息编码器，用于将消息编码为 ByteBuf ，因为后续的处理器都需要 ByteBuf 类型的消息
+                    pipeline.addLast(new MessageCodecSharable());
+                    // 消息分发处理器，用于分发消息到不同的处理器
+                    pipeline.addLast(new MessageDispatcherHandler());
                     // 30 秒没有读写操作时触发 IdleState.READER_IDLE 事件
                     // 这个心跳处理器因为只有读时间，所以只在入站的时候处理，出战的时候虽然经过但是没有处理业务
                     pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
                     // 心跳处理器，用于处理心跳包
                     pipeline.addLast(new HeartBeatHandler());
+                    // 连接成功处理器，用于处理连接成功事件，此时用户上线
                     pipeline.addLast(new ConnectSuccessMessageHandler());
                     // 退出登录处理器，用于处理退出登录请求
                     pipeline.addLast(new QuitLoginHandler());

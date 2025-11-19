@@ -29,17 +29,6 @@ public class WebSocketService {
 
     }
 
-    public void sendMessage(MessageVO messageVO) {
-        // 获得接收者id
-        Long receiverId = messageVO.getReceiverId();
-        // 获得接收者channel
-        Channel receiverChannel = ChannelManageUtil.Online_user.get(receiverId);
-        // 发送消息
-        if (receiverChannel != null) {
-            receiverChannel.writeAndFlush(new TextWebSocketFrame(JSONUtil.toJsonStr(messageVO)));
-        }
-    }
-
     public void online(Channel channel) {
         // TODO 用户上线提醒，之后完成吧
         // 获得用户id

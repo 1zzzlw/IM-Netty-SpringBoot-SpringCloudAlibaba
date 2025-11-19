@@ -2,6 +2,8 @@ package com.zzzlew.zzzimserver.pojo;
 
 import com.zzzlew.zzzimserver.pojo.dto.message.GroupChatRequestDTO;
 import com.zzzlew.zzzimserver.pojo.dto.message.PrivateChatRequestDTO;
+import com.zzzlew.zzzimserver.pojo.vo.message.GroupChatResponseVO;
+import com.zzzlew.zzzimserver.pojo.vo.message.PrivateChatResponseVO;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -24,8 +26,11 @@ public abstract class Message implements Serializable {
 
     public abstract int getMessageType();
 
-    public static final int PrivateChatRequestDTO = 1000;
-    public static final int GroupChatRequestDTO = 1001;
+    public static final int PrivateChatRequestDTO = 1;
+    public static final int PrivateChatResponseVO = 2;
+
+    public static final int GroupChatRequestDTO = 3;
+    public static final int GroupChatResponseVO = 4;
 
     /**
      * 根据消息类型字节，获得对应的消息 class
@@ -39,7 +44,9 @@ public abstract class Message implements Serializable {
 
     static {
         messageClasses.put(PrivateChatRequestDTO, PrivateChatRequestDTO.class);
+        messageClasses.put(PrivateChatResponseVO, PrivateChatResponseVO.class);
         messageClasses.put(GroupChatRequestDTO, GroupChatRequestDTO.class);
+        messageClasses.put(GroupChatResponseVO, GroupChatResponseVO.class);
     }
 
 }

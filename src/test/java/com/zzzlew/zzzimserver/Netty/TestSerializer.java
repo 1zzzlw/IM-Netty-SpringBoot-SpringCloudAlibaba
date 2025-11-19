@@ -37,6 +37,7 @@ public class TestSerializer {
         privateChatRequestDTO.setReceiverId(2L);
         privateChatRequestDTO.setMsgType(1);
         privateChatRequestDTO.setContent("hello");
+
         // 写入消息到通道, 出站，进入编码器，进行序列化
         channel.writeOutbound(privateChatRequestDTO);
         // 触发消息编码和日志打印

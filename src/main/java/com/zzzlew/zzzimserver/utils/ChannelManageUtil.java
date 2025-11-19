@@ -25,4 +25,8 @@ public class ChannelManageUtil {
         return Online_channel.get(channel);
     }
 
+    public static Channel getChannel(Long userId) {
+        return Online_user.get(userId);
+    }
+
 }

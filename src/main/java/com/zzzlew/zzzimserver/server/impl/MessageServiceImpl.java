@@ -48,7 +48,6 @@ public class MessageServiceImpl implements MessageService {
         MessageVO messageVO = BeanUtil.copyProperties(messageDTO, MessageVO.class);
         messageVO.setSendTime(LocalDateTime.now());
 
-        webSocketService.sendMessage(messageVO);
         // 保存消息到数据库
         messageMapper.saveMessage(messageDTO);
 
