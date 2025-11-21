@@ -51,6 +51,8 @@ public class MessageServiceImpl implements MessageService {
         // 保存消息到数据库
         messageMapper.saveMessage(messageDTO);
 
+        // TODO 修改会话列表中的一些状态，未读消息数量，最后一条消息时间，最后一条消息内容，以及显示状态。
+
         return messageVO;
     }
 
