@@ -37,8 +37,4 @@ public class ConversationImpl implements ConversationService {
         return conversationVOList;
     }
 
-    @Override
-    public ConversationVO createGroupConversation(ConversationVO conversationVO) {
-        return null;
-    }
 }

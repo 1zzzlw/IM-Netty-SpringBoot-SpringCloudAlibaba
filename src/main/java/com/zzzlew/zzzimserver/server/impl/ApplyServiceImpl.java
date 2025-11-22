@@ -5,6 +5,7 @@ import com.zzzlew.zzzimserver.mapper.FriendMapper;
 import com.zzzlew.zzzimserver.pojo.dto.apply.DealApplyDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.SendApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.ApplyVO;
+import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
 import com.zzzlew.zzzimserver.server.ApplyService;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
@@ -71,6 +72,32 @@ public class ApplyServiceImpl implements ApplyService {
             friendMapper.addFriendToRelation(toUserId, fromUserId);
             friendMapper.addFriendToRelation(fromUserId, toUserId);
         }
+    }
+
+    /**
+     * 发送群聊申请
+     * 
+     * @param friendIdList 好友ID列表
+     * @param groupName 群聊名称
+     */
+    @Override
+    public void createGroupConversation(List<Long> friendIdList, String groupName) {
+        // 获得当前登录用户id
+        Long userId = UserHolder.getUser().getId();
+        // 获得用户头像
+        String avatar = UserHolder.getUser().getAvatar();
+        // 插入群聊表
+        applyMapper.sendGroupApply(userId, friendIdList, groupName, avatar);
+    }
+
+    @Override
+    public List<GroupApplyVO> getGroupApplyList() {
+        // 获得当前登录用户id
+        Long userId = UserHolder.getUser().getId();
+        // 根据id查询对应的群聊申请列表
+        List<GroupApplyVO> list = applyMapper.getGroupApplyList(userId);
+        log.info("群聊申请列表: {}", list);
+        return list;
     }
 
 }

@@ -1,7 +1,9 @@
 package com.zzzlew.zzzimserver.controller;
 
+import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
 import com.zzzlew.zzzimserver.result.Result;
+import com.zzzlew.zzzimserver.server.ApplyService;
 import com.zzzlew.zzzimserver.server.ConversationService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -23,10 +25,12 @@ public class ConversationController {
 
     @Resource
     private ConversationService conversationService;
+    @Resource
+    private ApplyService applyService;
 
     /**
      * 获取会话列表
-     * 
+     *
      * @return 会话列表
      */
     @GetMapping("/list/{conversationId}")
@@ -39,15 +43,29 @@ public class ConversationController {
 
     /**
      * 创建群聊
-     * 
-     * @param conversationVO 会话信息
+     *
+     * @param friendId 好友ID
+     * @param groupName 群聊名称
      * @return 创建的会话信息
      */
-    @PostMapping("/create")
-    public Result<ConversationVO> createGroupConversation(@RequestBody ConversationVO conversationVO) {
-        log.info("创建群聊：{}", conversationVO);
-        ConversationVO createdConversationVO = conversationService.createGroupConversation(conversationVO);
-        return Result.success(createdConversationVO);
+    @PostMapping("/create/{friendId}")
+    public Result<Object> createGroupConversation(@PathVariable String friendId, @RequestParam String groupName) {
+        log.info("创建群聊：{}，群聊名称：{}", friendId, groupName);
+        List<Long> friendIdList = Arrays.stream(friendId.split(",")).map(Long::valueOf).toList();
+        log.info("好友ID列表：{}", friendIdList);
+        applyService.createGroupConversation(friendIdList, groupName);
+        return Result.success();
+    }
+
+    /**
+     * 获取群聊申请列表
+     *
+     * @return 群聊申请列表
+     */
+    @GetMapping("/groupApplyList")
+    public Result<List<GroupApplyVO>> getGroupApplyList() {
+        List<GroupApplyVO> groupApplyVOList = applyService.getGroupApplyList();
+        return Result.success(groupApplyVOList);
     }
 
 }

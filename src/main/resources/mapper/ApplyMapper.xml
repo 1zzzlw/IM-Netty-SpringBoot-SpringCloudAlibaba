@@ -29,4 +29,19 @@
         where apply_id = #{applyId}
     </update>
 
+    <insert id="sendGroupApply">
+        insert into group_apply (user_id, member_id, group_name)
+        values
+        <foreach collection="friendIdList" item="memberId" separator=",">
+            (#{userId}, #{memberId}, #{groupName}, #{avatar})
+        </foreach>
+    </insert>
+
+    <select id="getGroupApplyList" resultType="com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO"
+            parameterType="java.lang.Long">
+        select id, user_id, user_avatar, group_name, status
+        from group_apply
+        where member_id = #{userId}
+    </select>
+
 </mapper>

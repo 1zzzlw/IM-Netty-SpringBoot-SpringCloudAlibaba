@@ -3,6 +3,7 @@ package com.zzzlew.zzzimserver.server;
 import com.zzzlew.zzzimserver.pojo.dto.apply.DealApplyDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.SendApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.ApplyVO;
+import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
 
 import java.util.List;
 
@@ -34,5 +35,20 @@ public interface ApplyService {
      * @param dealApplyDTO 好友申请信息
      */
     void dealApply(DealApplyDTO dealApplyDTO);
+
+    /**
+     * 发送群聊申请
+     * 
+     * @param friendIdList 好友ID列表
+     * @param groupName 群聊名称
+     */
+    void createGroupConversation(List<Long> friendIdList, String groupName);
+
+     /**
+      * 获取群聊申请列表
+      *
+      * @return 群聊申请列表
+      */
+    List<GroupApplyVO> getGroupApplyList();
 
 }

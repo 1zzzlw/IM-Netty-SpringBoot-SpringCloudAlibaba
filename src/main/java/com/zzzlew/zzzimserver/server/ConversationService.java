@@ -14,6 +14,4 @@ public interface ConversationService {
 
     List<ConversationVO> getConversationList(List<String> conversationIdList);
 
-    ConversationVO createGroupConversation(ConversationVO conversationVO);
-
 }
