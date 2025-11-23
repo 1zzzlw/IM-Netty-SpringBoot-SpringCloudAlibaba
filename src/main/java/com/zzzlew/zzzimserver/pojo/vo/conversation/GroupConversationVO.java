@@ -51,6 +51,11 @@ public class GroupConversationVO {
     private LocalDateTime latestMsgTime;
 
     /**
+     * 未读消息数量
+     */
+    private Integer unreadCount;
+
+    /**
      * 会话状态
      */
     private Integer status;

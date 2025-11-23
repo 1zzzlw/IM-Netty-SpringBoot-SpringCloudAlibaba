@@ -15,6 +15,6 @@ public interface MessageService {
 
     MessageVO sendMessage(MessageDTO messageDTO);
 
-    List<MessageVO> getMessageList(Long receiverId);
+    List<MessageVO> getMessageList(String conversationId);
 
 }

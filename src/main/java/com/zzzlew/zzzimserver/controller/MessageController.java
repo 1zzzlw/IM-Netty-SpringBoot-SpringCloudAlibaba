@@ -42,9 +42,9 @@ public class MessageController {
      * @return 消息列表
      */
     @GetMapping("/list")
-    public Result<List<MessageVO>> getMessageList(@RequestParam Long receiverId) {
-        log.info("接收者id为：{}", receiverId);
-        List<MessageVO> messageVOList = messageService.getMessageList(receiverId);
+    public Result<List<MessageVO>> getMessageList(@RequestParam String conversationId) {
+        log.info("对话id为：{}", conversationId);
+        List<MessageVO> messageVOList = messageService.getMessageList(conversationId);
         log.info("消息列表：{}", messageVOList);
         return Result.success(messageVOList);
     }

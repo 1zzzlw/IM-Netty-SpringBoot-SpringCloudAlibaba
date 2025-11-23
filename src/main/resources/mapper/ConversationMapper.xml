@@ -49,6 +49,7 @@
                gm.is_top,
                gm.latest_msg,
                gm.latest_msg_time,
+               gm.unread_count,
                gm.status
         from group_member gm
                  join group_conversation gc on gc.id = gm.group_id

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zzzlew.zzzimserver.mapper.GroupConversationMapper">
+
+    <update id="updateConversationStatus">
+        UPDATE group_member
+        SET latest_msg_time    = #{sendTime},
+            latest_msg = #{content},
+            status           = 1,
+            unread_count     = CASE
+                                   WHEN user_id != #{userId} THEN unread_count + 1
+                                   ELSE unread_count
+                END
+        WHERE group_id = #{conversationId};
+    </update>
+
+</mapper>
