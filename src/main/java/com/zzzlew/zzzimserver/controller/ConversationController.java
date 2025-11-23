@@ -5,6 +5,7 @@ import com.zzzlew.zzzimserver.pojo.dto.apply.GroupApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.GroupConversationVO;
+import com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.ApplyService;
 import com.zzzlew.zzzimserver.server.ConversationService;
@@ -89,10 +90,22 @@ public class ConversationController {
      *
      * @return 群聊列表
      */
-    @GetMapping("/groupMemberList")
-    public Result<List<GroupConversationVO>> getGroupMemberList() {
-        List<GroupConversationVO> groupConversationVOList = conversationService.getGroupMemberList();
+    @GetMapping("/groupList")
+    public Result<List<GroupConversationVO>> getGroupConversationList() {
+        List<GroupConversationVO> groupConversationVOList = conversationService.getGroupConversationList();
         return Result.success(groupConversationVOList);
+    }
+
+    /**
+     * 获取群聊成员列表
+     *
+     * @param conversationId 群聊会话ID
+     * @return 群聊成员列表
+     */
+    @GetMapping("/groupMemberList/{conversationId}")
+    public Result<List<GroupMemberVO>> getGroupMemberList(@PathVariable String conversationId) {
+        List<GroupMemberVO> groupMemberVOList = conversationService.getGroupMemberList(conversationId);
+        return Result.success(groupMemberVOList);
     }
 
 }

@@ -3,6 +3,7 @@ package com.zzzlew.zzzimserver.mapper;
 import com.zzzlew.zzzimserver.pojo.dto.conversation.GroupConversationDTO;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.GroupConversationVO;
+import com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,5 +54,13 @@ public interface ConversationMapper {
      * @return 群聊会话列表
      */
     List<GroupConversationVO> selectGroupListByUserIdAndConversationId(Long userId);
+
+     /**
+      * 查询群聊成员列表
+      *
+      * @param conversationId 群聊会话ID
+      * @return 群聊成员列表
+      */
+    List<GroupMemberVO> selectGroupMemberListByConversationId(String conversationId);
 
 }

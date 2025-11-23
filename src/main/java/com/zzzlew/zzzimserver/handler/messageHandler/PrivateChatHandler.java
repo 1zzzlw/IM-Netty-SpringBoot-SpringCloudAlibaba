@@ -32,10 +32,12 @@ public class PrivateChatHandler extends SimpleChannelInboundHandler<PrivateChatR
         // 获得接收者id
         Long receiverId = privateChatRequestDTO.getReceiverId();
         // 搭建 conversationId
-        String conversationId = userId > receiverId ? String.format("%d_%d", userId, receiverId)
-            : String.format("%d_%d", receiverId, userId);
+        // String conversationId = userId > receiverId ? String.format("%d_%d", userId, receiverId)
+        // : String.format("%d_%d", receiverId, userId);
+
         // 完善 privateChatRequestDTO
-        privateChatRequestDTO.setConversationId(conversationId);
+        // 前端传递了，这里没必要重新组合了
+        // privateChatRequestDTO.setConversationId(conversationId);
         privateChatRequestDTO.setSenderId(userId);
         privateChatRequestDTO.setMsgType(1);
         // 获取接收者的channel

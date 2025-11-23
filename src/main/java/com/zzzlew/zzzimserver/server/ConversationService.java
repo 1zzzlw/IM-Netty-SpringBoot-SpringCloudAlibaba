@@ -2,6 +2,7 @@ package com.zzzlew.zzzimserver.server;
 
 import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.GroupConversationVO;
+import com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO;
 
 import java.util.List;
 
@@ -15,6 +16,8 @@ public interface ConversationService {
 
     List<ConversationVO> getConversationList(List<String> conversationIdList);
 
-    List<GroupConversationVO> getGroupMemberList();
+    List<GroupConversationVO> getGroupConversationList();
+
+    List<GroupMemberVO> getGroupMemberList(String conversationId);
 
 }

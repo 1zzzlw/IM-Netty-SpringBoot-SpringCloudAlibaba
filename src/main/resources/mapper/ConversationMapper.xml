@@ -56,4 +56,14 @@
         where gm.user_id = #{userId}
     </select>
 
+    <select id="selectGroupMemberListByConversationId"
+            resultType="com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO"
+            parameterType="java.lang.String">
+        select gm.user_id, gm.role, ua.username, ua.avatar
+        from group_member gm
+                 join user_auth ua on gm.user_id =
+                                      ua.user_id
+        where gm.group_id = #{conversationId}
+    </select>
+
 </mapper>

@@ -3,6 +3,7 @@ package com.zzzlew.zzzimserver.server.impl;
 import com.zzzlew.zzzimserver.mapper.ConversationMapper;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.GroupConversationVO;
+import com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO;
 import com.zzzlew.zzzimserver.server.ConversationService;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
@@ -39,13 +40,21 @@ public class ConversationImpl implements ConversationService {
     }
 
     @Override
-    public List<GroupConversationVO> getGroupMemberList() {
+    public List<GroupConversationVO> getGroupConversationList() {
         // 获得当前登录用户id
         Long userId = UserHolder.getUser().getId();
         // 根据用户id和会话id查询登录用户的会话列表
         List<GroupConversationVO> groupConversationVOList =
             conversationMapper.selectGroupListByUserIdAndConversationId(userId);
         return groupConversationVOList;
+    }
+
+    @Override
+    public List<GroupMemberVO> getGroupMemberList(String conversationId) {
+        // 根据用户id和会话id查询登录用户的会话列表
+        List<GroupMemberVO> groupMemberVOList =
+            conversationMapper.selectGroupMemberListByConversationId(conversationId);
+        return groupMemberVOList;
     }
 
 }
