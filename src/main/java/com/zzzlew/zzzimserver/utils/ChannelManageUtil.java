@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ChannelManageUtil {
 
+    //
     public static final ConcurrentHashMap<Long, Channel> Online_user = new ConcurrentHashMap<>();
     public static final ConcurrentHashMap<Channel, UserBaseDTO> Online_channel = new ConcurrentHashMap<>();
 

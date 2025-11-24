@@ -47,4 +47,5 @@ public class ConnectSuccessMessageHandler extends ChannelInboundHandlerAdapter {
             webSocketService.online(ctx.channel());
         }
     }
+    
 }

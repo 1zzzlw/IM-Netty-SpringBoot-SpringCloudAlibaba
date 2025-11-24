@@ -5,12 +5,12 @@
 
     <update id="updateConversationStatus">
         UPDATE group_member
-        SET latest_msg_time    = #{sendTime},
-            latest_msg = #{content},
-            status           = 1,
-            unread_count     = CASE
-                                   WHEN user_id != #{userId} THEN unread_count + 1
-                                   ELSE unread_count
+        SET latest_msg_time = #{sendTime},
+            latest_msg      = #{content},
+            status          = 1,
+            unread_count    = CASE
+                                  WHEN user_id != #{userId} THEN unread_count + 1
+                                  ELSE unread_count
                 END
         WHERE group_id = #{conversationId};
     </update>
