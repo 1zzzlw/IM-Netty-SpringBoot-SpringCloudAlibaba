@@ -8,6 +8,7 @@ import com.zzzlew.zzzimserver.pojo.vo.apply.ApplyResponseVO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyResponseVO;
 import com.zzzlew.zzzimserver.pojo.vo.message.GroupChatResponseVO;
 import com.zzzlew.zzzimserver.pojo.vo.message.PrivateChatResponseVO;
+import com.zzzlew.zzzimserver.pojo.vo.user.LoginSuccessMessage;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -42,6 +43,8 @@ public abstract class Message implements Serializable {
     public static final int GroupApplyRequestDTO = 7;
     public static final int GroupApplyResponseVO = 8;
 
+    public static final int LoginSuccessMessage = 9;
+
     /**
      * 根据消息类型字节，获得对应的消息 class
      *
@@ -61,6 +64,7 @@ public abstract class Message implements Serializable {
         messageClasses.put(ApplyResponseVO, ApplyResponseVO.class);
         messageClasses.put(GroupApplyRequestDTO, GroupApplyRequestDTO.class);
         messageClasses.put(GroupApplyResponseVO, GroupApplyResponseVO.class);
+        messageClasses.put(LoginSuccessMessage, LoginSuccessMessage.class);
     }
 
 }

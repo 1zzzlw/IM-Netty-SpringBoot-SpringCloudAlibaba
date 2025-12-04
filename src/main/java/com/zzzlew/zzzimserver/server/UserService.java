@@ -22,7 +22,7 @@ public interface UserService {
 
     String createPhoneCode(String phone);
 
-    void pendingLogin(String token);
+    void pendingLogin(String token, Long userId);
 
     String refreshToken();
 

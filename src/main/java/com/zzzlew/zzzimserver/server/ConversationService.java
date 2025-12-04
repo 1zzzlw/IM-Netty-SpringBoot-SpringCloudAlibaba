@@ -20,4 +20,6 @@ public interface ConversationService {
 
     List<GroupMemberVO> getGroupMemberList(String conversationId);
 
+    void clearConversationUnreadCounts(String conversationId);
+
 }

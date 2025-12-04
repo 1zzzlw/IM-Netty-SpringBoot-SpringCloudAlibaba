@@ -61,11 +61,17 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
 
         // 从JwtUtil中获取token的过期时间
         long expirationTime = jwtUtil.getExpirationTime(jwtproperties.getSecretKey(), token);
+
         if (expirationTime > 0 && expirationTime < 10) {
+            log.info("token快过期，过期时间为：{}", expirationTime);
             // toekn快过期，返回前端状态码460调用刷新token接口
             response.setStatus(460);
             // 中断当前请求，让前端处理刷新token逻辑
             return false;
+        }
+
+        if (expirationTime <= 0) {
+            throw new RuntimeException("token过期");
         }
 
         // 将用户信息转为用户基本信息DTO UserBaseDTO

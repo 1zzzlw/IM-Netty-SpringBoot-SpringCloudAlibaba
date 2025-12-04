@@ -108,4 +108,15 @@ public class ConversationController {
         return Result.success(groupMemberVOList);
     }
 
+    /**
+     * 清除会话中未读消息计数
+     *
+     * @param conversationId 群聊会话ID
+     */
+    @PutMapping("/isReaded/{conversationId}")
+    public Result<Object> clearConversationUnreadCounts(@PathVariable String conversationId) {
+        conversationService.clearConversationUnreadCounts(conversationId);
+        return Result.success();
+    }
+
 }

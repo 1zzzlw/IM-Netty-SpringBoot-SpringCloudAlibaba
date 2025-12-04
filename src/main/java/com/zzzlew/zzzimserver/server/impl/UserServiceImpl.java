@@ -7,6 +7,7 @@ import com.zzzlew.zzzimserver.config.KaptchaConfig;
 import com.zzzlew.zzzimserver.constant.JwtClaimsConstant;
 import com.zzzlew.zzzimserver.constant.MessageConstant;
 import com.zzzlew.zzzimserver.exception.*;
+import com.zzzlew.zzzimserver.mapper.FriendMapper;
 import com.zzzlew.zzzimserver.mapper.UserInfoMapper;
 import com.zzzlew.zzzimserver.mapper.UserMapper;
 import com.zzzlew.zzzimserver.pojo.dto.user.UserBaseDTO;
@@ -14,6 +15,7 @@ import com.zzzlew.zzzimserver.pojo.dto.user.UserLoginDTO;
 import com.zzzlew.zzzimserver.pojo.dto.user.UserRegisterDTO;
 import com.zzzlew.zzzimserver.pojo.entity.UserAuth;
 import com.zzzlew.zzzimserver.pojo.entity.UserInfo;
+import com.zzzlew.zzzimserver.pojo.vo.friend.FriendRelationVO;
 import com.zzzlew.zzzimserver.pojo.vo.user.UserLoginVO;
 import com.zzzlew.zzzimserver.properties.Jwtproperties;
 import com.zzzlew.zzzimserver.server.UserService;
@@ -52,6 +54,8 @@ public class UserServiceImpl implements UserService {
     @Resource
     private UserInfoMapper userInfoMapper;
     @Resource
+    private FriendMapper friendMapper;
+    @Resource
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private Jwtproperties jwtproperties;
@@ -85,7 +89,23 @@ public class UserServiceImpl implements UserService {
         // 生成并存储token
         UserLoginVO userLoginVO = generateAndStoreWithUpdateToken(userAuth);
 
+        Long userId = userAuth.getUserId();
+        storeFriendListId(userId);
+
         return userLoginVO;
+    }
+
+    private void storeFriendListId(Long userId) {
+        String friendListKey = USER_FRIEND_LIST_KEY + userId;
+        // 登录成功，查询该用户的好友列表，并存入redis中
+        List<FriendRelationVO> friendRelationVOList = friendMapper.selectFriendList(userId);
+        // TODO暂时先只存好友的id，以后有需要在进行扩展或者改善
+        Set<String> friendIdSet =
+            friendRelationVOList.stream().map(vo -> vo.getId().toString()).collect(Collectors.toSet());
+        // 将好友列表存储到redis中
+        stringRedisTemplate.opsForSet().add(friendListKey, friendIdSet.toArray(new String[0]));
+        // 设置好友列表的过期时间
+        stringRedisTemplate.expire(friendListKey, USER_FRIEND_LIST_KEY_TTL, TimeUnit.MINUTES);
     }
 
     /**
@@ -191,23 +211,27 @@ public class UserServiceImpl implements UserService {
      * @param token 登录时生成的token
      */
     @Override
-    public void pendingLogin(String token) {
+    public void pendingLogin(String token, Long userId) {
         // 校验token是否存在
         String tokenInfoKey = LOGIN_USER_KEY + token;
         // 判断token是否过期
         if (jwtUtil.isTokenExpired(jwtproperties.getSecretKey(), token)) {
             throw new TokenExpiredException(MessageConstant.TOKEN_EXPIRED);
         }
+        // 校验token是否存在
         Boolean hasKey = stringRedisTemplate.hasKey(tokenInfoKey);
         if (!hasKey) {
             throw new TokenNotFoundException(MessageConstant.TOKEN_NOT_FOUND);
         }
+
+        storeFriendListId(userId);
     }
 
     @Override
     public String refreshToken() {
         // 拿到当前登录用户的信息
         UserBaseDTO user = UserHolder.getUser();
+        log.info("刷新token时当前登录用户信息：{}", user);
         UserAuth userAuth = UserAuth.builder().userId(user.getId()).username(user.getUsername())
             .account(user.getAccount()).avatar(user.getAvatar()).build();
         UserLoginVO userLoginVO = generateAndStoreWithUpdateToken(userAuth);

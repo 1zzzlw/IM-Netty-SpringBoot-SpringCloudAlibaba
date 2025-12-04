@@ -23,6 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 刷新token拦截器
-        registry.addInterceptor(refreshTokenInterceptor).addPathPatterns("/**").order(0);
+        registry.addInterceptor(refreshTokenInterceptor).addPathPatterns("/**")
+            .excludePathPatterns("/login", "/register", "/verifyCode").order(0);
     }
 }

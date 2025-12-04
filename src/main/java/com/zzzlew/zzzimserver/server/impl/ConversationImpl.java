@@ -57,4 +57,9 @@ public class ConversationImpl implements ConversationService {
         return groupMemberVOList;
     }
 
+    @Override
+    public void clearConversationUnreadCounts(String conversationId) {
+        // TODO 清除会话中未读消息计数
+    }
+
 }
