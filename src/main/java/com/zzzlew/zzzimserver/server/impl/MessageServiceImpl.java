@@ -41,7 +41,6 @@ public class MessageServiceImpl implements MessageService {
         messageDTO.setSenderId(userId);
         String conversationId = messageDTO.getConversationId();
 
-        messageDTO.setMsgType(1);
         MessageVO messageVO = BeanUtil.copyProperties(messageDTO, MessageVO.class);
         LocalDateTime sendTime = LocalDateTime.now();
         messageVO.setSendTime(sendTime);
