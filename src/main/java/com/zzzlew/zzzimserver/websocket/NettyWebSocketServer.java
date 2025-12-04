@@ -76,9 +76,9 @@ public class NettyWebSocketServer {
                     // websocket协议本身是基于http协议的，所以这边也要使用http解编码器
                     pipeline.addLast(new HttpServerCodec());
                     // 将HTTP消息的多个部分聚合成完整的FullHttpRequest 确保收到完整的HTTP请求再处理 ，避免处理不完整的请求
-                    // 这个处理器只在入站的时候处理
+                    // 入站请求，这个处理器只在入站的时候处理
                     pipeline.addLast(new HttpObjectAggregator(64 * 1024));
-                    // 用于处理 HTTP 消息的分块写入，确保数据按块发送 这个处理器在消息入站的时候不使用，因为消息入站的只是请求
+                    // 出战请求，用于处理 HTTP 消息的分块写入，确保数据按块发送 这个处理器在消息入站的时候不使用，因为消息入站的只是请求
                     pipeline.addLast(new ChunkedWriteHandler());
                     // 自定义 Http 处理头，用于处理 Http 头信息
                     pipeline.addLast(new HttpHeadersHandler());
