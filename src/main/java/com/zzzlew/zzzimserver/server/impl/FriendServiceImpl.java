@@ -52,6 +52,11 @@ public class FriendServiceImpl implements FriendService {
         UserSearchVO userSearchVO = userInfoMapper.getByPhoneOrAccount(userId, phone);
         // 打印查询到的用户信息
         log.info("userSearchVO: {}", userSearchVO);
+        // 检查用户是否存在
+        if (userSearchVO == null) {
+            log.info("用户不存在");
+            return null;
+        }
         if (userSearchVO.getIsFriend() == 0) {
             // 不是好友关系
             log.info("不是好友关系");
