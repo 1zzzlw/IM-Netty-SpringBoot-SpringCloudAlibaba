@@ -9,6 +9,8 @@ import com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.ApplyService;
 import com.zzzlew.zzzimserver.server.ConversationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/conversation")
+@Tag(name = "会话接口")
 public class ConversationController {
 
     @Resource
@@ -37,6 +40,7 @@ public class ConversationController {
      *
      * @return 会话列表
      */
+    @Operation(summary = "获取会话列表")
     @GetMapping("/list/{conversationId}")
     public Result<List<ConversationVO>> getConversationList(@PathVariable String conversationId) {
         List<String> conversationIdList = Arrays.asList(conversationId.split(","));
@@ -52,6 +56,7 @@ public class ConversationController {
      * @param groupApplyDTO 群聊申请信息
      * @return 创建的会话信息
      */
+    @Operation(summary = "创建群聊")
     @PostMapping("/create/{friendId}")
     public Result<String> createGroupConversation(@PathVariable String friendId,
         @RequestBody GroupApplyDTO groupApplyDTO) {
@@ -67,6 +72,7 @@ public class ConversationController {
      *
      * @return 群聊申请列表
      */
+    @Operation(summary = "获取群聊申请列表")
     @GetMapping("/groupApplyList")
     public Result<List<GroupApplyVO>> getGroupApplyList() {
         List<GroupApplyVO> groupApplyVOList = applyService.getGroupApplyList();
@@ -78,6 +84,7 @@ public class ConversationController {
      *
      * @param dealGroupDTO 入群申请处理信息
      */
+    @Operation(summary = "同意入群申请")
     @PostMapping("/groupApply/deal")
     public Result<Object> dealGroupApply(@RequestBody DealGroupDTO dealGroupDTO) {
         log.info("处理群聊申请：{}", dealGroupDTO);
@@ -90,6 +97,7 @@ public class ConversationController {
      *
      * @return 群聊列表
      */
+    @Operation(summary = "获取群聊列表")
     @GetMapping("/groupList")
     public Result<List<GroupConversationVO>> getGroupConversationList() {
         List<GroupConversationVO> groupConversationVOList = conversationService.getGroupConversationList();
@@ -102,6 +110,7 @@ public class ConversationController {
      * @param conversationId 群聊会话ID
      * @return 群聊成员列表
      */
+    @Operation(summary = "获取群聊成员列表")
     @GetMapping("/groupMemberList/{conversationId}")
     public Result<List<GroupMemberVO>> getGroupMemberList(@PathVariable String conversationId) {
         List<GroupMemberVO> groupMemberVOList = conversationService.getGroupMemberList(conversationId);
@@ -113,6 +122,7 @@ public class ConversationController {
      *
      * @param conversationId 群聊会话ID
      */
+    @Operation(summary = "清除会话中未读消息计数")
     @PutMapping("/isReaded/{conversationId}")
     public Result<Object> clearConversationUnreadCounts(@PathVariable String conversationId) {
         conversationService.clearConversationUnreadCounts(conversationId);

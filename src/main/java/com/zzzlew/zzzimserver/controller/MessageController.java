@@ -4,6 +4,8 @@ import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
 import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.MessageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/message")
+@Tag(name = "消息模块")
 public class MessageController {
 
     @Resource
@@ -29,6 +32,7 @@ public class MessageController {
      * 
      * @return 消息id
      */
+    @Operation(summary = "发送消息")
     @PostMapping("/send")
     public Result<MessageVO> sendMessage(@RequestBody MessageDTO messageDTO) {
         log.info("发送消息：{}", messageDTO);
@@ -41,6 +45,7 @@ public class MessageController {
      *
      * @return 消息列表
      */
+    @Operation(summary = "获取消息列表")
     @GetMapping("/list")
     public Result<List<MessageVO>> getMessageList(@RequestParam String conversationId) {
         log.info("对话id为：{}", conversationId);

@@ -5,6 +5,8 @@ import com.zzzlew.zzzimserver.pojo.dto.apply.SendApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.ApplyVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.ApplyService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/apply")
+@Tag(name = "好友申请接口")
 public class ApplyController {
 
     @Resource
@@ -30,6 +33,7 @@ public class ApplyController {
      * 
      * @param sendApplyDTO 好友申请信息
      */
+    @Operation(summary = "发送好友申请")
     @PostMapping("/send")
     public Result<Long> sendApply(@RequestBody SendApplyDTO sendApplyDTO) {
         log.info("添加好友，申请信息：{}", sendApplyDTO);
@@ -42,6 +46,7 @@ public class ApplyController {
      * 
      * @return 好友申请发送历史
      */
+    @Operation(summary = "获取好友申请发送历史")
     @GetMapping("/sendHistory")
     public Result<Object> getSendHistory() {
         return Result.success();
@@ -52,6 +57,7 @@ public class ApplyController {
      * 
      * @return 好友申请列表
      */
+    @Operation(summary = "获取好友申请列表")
     @GetMapping("/list")
     public Result<List<ApplyVO>> getApplyList() {
         List<ApplyVO> applyList = applyService.getApplyList();
@@ -63,6 +69,7 @@ public class ApplyController {
      * 
      * @param dealApplyDTO 好友申请处理信息
      */
+    @Operation(summary = "处理好友申请")
     @PostMapping("/deal")
     public Result<Object> dealApply(@RequestBody DealApplyDTO dealApplyDTO) {
         log.info("处理好友申请，申请信息为：{}", dealApplyDTO);

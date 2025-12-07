@@ -4,6 +4,8 @@ import com.zzzlew.zzzimserver.pojo.vo.friend.FriendRelationVO;
 import com.zzzlew.zzzimserver.pojo.vo.user.UserSearchVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.FriendService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/friend")
+@Tag(name = "好友接口")
 public class FriendController {
 
     @Resource
@@ -31,6 +34,7 @@ public class FriendController {
      * 
      * @return 好友列表
      */
+    @Operation(summary = "获取好友列表")
     @GetMapping("/list")
     public Result<List<FriendRelationVO>> getFriendList() {
         log.info("获取好友列表");
@@ -38,6 +42,13 @@ public class FriendController {
         return Result.success(friendRelationVOList);
     }
 
+    /**
+     * 搜索用户
+     * 
+     * @param phone 手机号
+     * @return 用户搜索vo
+     */
+    @Operation(summary = "搜索用户")
     @GetMapping("/search")
     public Result<UserSearchVO> search(String phone) {
         log.info("搜索用户 {} 的信息", phone);

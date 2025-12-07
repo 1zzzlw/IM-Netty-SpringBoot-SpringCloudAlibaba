@@ -34,14 +34,21 @@ mybatis:
 logging:
   level:
     com:
-    zzzlew:
-    zzzimserver:
-      mapper: debug
-      server: info
-      controller: info
+      zzzlew:
+        zzzimserver:
+          mapper: debug
+          server: info
+          controller: info
 
 # websocket配置
 netty:
   websocket:
     # 端口
     port: 8000
+
+knife4j:
+  enable: true
+springdoc:
+  api-docs:
+    enabled: true # 生成OpenAPI 3.0的JSON数据源
+

@@ -7,6 +7,8 @@ import com.zzzlew.zzzimserver.pojo.vo.user.UserLoginVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +22,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("/login")
+@Tag(name = "登录接口")
 public class LoginController {
 
     @Resource
     private UserService userService;
 
+    /**
+     * 用户登录
+     * 
+     * @param userLoginDTO 用户登录信息
+     * @return 用户登录vo
+     */
+    @Operation(summary = "用户登录")
     @PostMapping
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
         log.info("当前登录用户信息：{}", userLoginDTO);
@@ -36,12 +46,26 @@ public class LoginController {
         return Result.success(userLoginVO);
     }
 
+    /**
+     * 生成登录验证码
+     * 
+     * @param response HttpServletResponse
+     */
+    @Operation(summary = "生成登录验证码")
     @GetMapping("/verifyCode")
     public void verifyCode(HttpServletResponse response) {
         log.info("随机生成登录验证码");
         userService.createCode(response);
     }
 
+    /**
+     * 用户登录确认
+     * 
+     * @param token 登录凭证
+     * @param userId 用户id
+     * @return 登录确认结果
+     */
+    @Operation(summary = "用户登录确认")
     @GetMapping("/pendingLogin")
     public Result<Object> pendingLogin(@RequestParam("token") String token, @RequestParam("userId") Long userId) {
         log.info("用户 {} 正在登录，用户id为 {}", token, userId);
