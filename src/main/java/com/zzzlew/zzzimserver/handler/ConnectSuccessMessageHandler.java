@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.zzzlew.zzzimserver.constant.RedisConstant.USER_FRIEND_LIST_KEY;
 
@@ -69,6 +70,8 @@ public class ConnectSuccessMessageHandler extends ChannelInboundHandlerAdapter {
             String onlineStatusKey = RedisConstant.USER_ONLINE_STATUS_KEY + userId;
             // 修改redis中的用户状态为在线
             stringRedisTemplate.opsForSet().add(onlineStatusKey, "online");
+            // 设置过期时间为270秒，因为用户在270秒内没有操作，就可以判断为用户不在线，对应心跳时间90秒
+            stringRedisTemplate.expire(onlineStatusKey, RedisConstant.USER_ONLINE_STATUS_KEY_TTL, TimeUnit.SECONDS);
         }
     }
 

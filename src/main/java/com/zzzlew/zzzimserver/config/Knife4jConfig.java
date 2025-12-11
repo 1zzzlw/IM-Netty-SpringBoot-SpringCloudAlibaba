@@ -29,4 +29,5 @@ public class Knife4jConfig {
     public GroupedOpenApi defaultGroup() {
         return GroupedOpenApi.builder().group("default").packagesToScan("com.zzzlew.zzzimserver.controller").build();
     }
+
 }

@@ -4,17 +4,30 @@ import cn.hutool.core.bean.BeanUtil;
 import com.zzzlew.zzzimserver.mapper.ConversationMapper;
 import com.zzzlew.zzzimserver.mapper.GroupConversationMapper;
 import com.zzzlew.zzzimserver.mapper.MessageMapper;
+import com.zzzlew.zzzimserver.pojo.dto.message.FileChunkInfoDTO;
 import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
 import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
 import com.zzzlew.zzzimserver.server.MessageService;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static com.zzzlew.zzzimserver.constant.RedisConstant.FILE_CHUNK_INDEX_KEY;
+import static com.zzzlew.zzzimserver.constant.RedisConstant.FILE_CHUNK_INDEX_KEY_TTL;
 
 /**
  * @Auther: zzzlew
@@ -32,6 +45,8 @@ public class MessageServiceImpl implements MessageService {
     private ConversationMapper conversationMapper;
     @Resource
     private GroupConversationMapper groupConversationMapper;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Transactional
     @Override
@@ -109,4 +124,73 @@ public class MessageServiceImpl implements MessageService {
         // 返回消息列表
         return messageVOList;
     }
+
+    @Override
+    public void uploadFileChunk(MultipartFile chunkBlob, FileChunkInfoDTO fileChunkInfoDTO) {
+        Integer chunkIndex = fileChunkInfoDTO.getChunkIndex();
+        String chunkHash = fileChunkInfoDTO.getChunkHash();
+        boolean isUploaded = fileChunkInfoDTO.getIsUploaded();
+
+        // if (isUploaded) {
+        // log.info("第{}个分片已上传完成", chunkIndex);
+        // return;
+        // }
+
+        byte[] bytes = null;
+        try {
+            bytes = chunkBlob.getBytes();
+        } catch (IOException e) {
+            log.error("上传文件分块消息失败: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+        // 计算接收分片的md5值
+        String md5Digest = DigestUtils.md5DigestAsHex(bytes);
+        if (!chunkHash.equals(md5Digest)) {
+            log.error("md5计算值{}与前端传递的{}不相同", md5Digest, chunkHash);
+            // TODO 以后增加自动重试机制
+            throw new RuntimeException("md5 校验失败");
+        } else {
+            log.info("第{}个分片校验成功", chunkIndex);
+        }
+
+        // 暂时缓存分块消息到本地
+        // TODO 暂时根据文件名来创建唯一的文件夹
+        String folderName = DigestUtils.md5DigestAsHex((fileChunkInfoDTO.getFilename()).getBytes());
+        String filePath = "G:\\FIleUpload\\" + folderName;
+        try (InputStream is = chunkBlob.getInputStream()) {
+            // 将文件片写入文件夹内,内部会先判断文件夹是否存在
+            FileUtils.forceMkdir(new File(filePath));
+            try (OutputStream os = new FileOutputStream(filePath + "\\" + chunkIndex)) {
+                byte[] buffer = new byte[1024 * 8]; // 8KB 对应前端的文件分块大小 5MB
+                int len;
+                while ((len = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, len);
+                }
+            }
+        } catch (IOException e) {
+            log.error("创建文件夹失败: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        String key = FILE_CHUNK_INDEX_KEY + fileChunkInfoDTO.getFilename();
+        // 分片文件写入成功之后，将分片索引信息写入redis
+        stringRedisTemplate.opsForZSet().add(key, chunkIndex.toString(), chunkIndex);
+        // 设置过期时间
+        stringRedisTemplate.expire(key, FILE_CHUNK_INDEX_KEY_TTL, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public List<Integer> checkUploaded(String filename) {
+        String key = FILE_CHUNK_INDEX_KEY + filename;
+        Set<String> chunkIndices = stringRedisTemplate.opsForZSet().range(key, 0, -1);
+        if (chunkIndices == null || chunkIndices.isEmpty()) {
+            // TODO 后期添加从本地查询已上传的分片索引
+            return new ArrayList<>();
+        }
+        // 将 Set<String> 转换为 List<Integer>
+        List<Integer> uploadedIndices = chunkIndices.stream().map(Integer::parseInt).collect(Collectors.toList());
+        return uploadedIndices;
+    }
+
+
 }

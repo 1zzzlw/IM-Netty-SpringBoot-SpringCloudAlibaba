@@ -26,4 +26,7 @@ public class RedisConstant {
     public static final String USER_ONLINE_STATUS_KEY = "user:online:status:";
     // 270秒过期时间，因为用户在270秒内没有操作，就可以判断为用户不在线，对应心跳时间90秒
     public static final Long USER_ONLINE_STATUS_KEY_TTL = 270L;
+
+    public static final String FILE_CHUNK_INDEX_KEY = "file:chunk:index:";
+    public static final Long FILE_CHUNK_INDEX_KEY_TTL = 2L;
 }
