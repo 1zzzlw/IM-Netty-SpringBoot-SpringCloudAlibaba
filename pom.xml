@@ -136,6 +136,13 @@
             <version>2.5.0</version>
         </dependency>
 
+        <!-- minio 依赖 -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -8,17 +8,17 @@ import com.zzzlew.zzzimserver.pojo.dto.message.FileChunkInfoDTO;
 import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
 import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
 import com.zzzlew.zzzimserver.server.MessageService;
+import com.zzzlew.zzzimserver.utils.MinIOFileStorgeUtil;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +47,8 @@ public class MessageServiceImpl implements MessageService {
     private GroupConversationMapper groupConversationMapper;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private MinIOFileStorgeUtil minIOFileStorgeUtil;
 
     @Transactional
     @Override
@@ -131,10 +133,10 @@ public class MessageServiceImpl implements MessageService {
         String chunkHash = fileChunkInfoDTO.getChunkHash();
         boolean isUploaded = fileChunkInfoDTO.getIsUploaded();
 
-        // if (isUploaded) {
-        // log.info("第{}个分片已上传完成", chunkIndex);
-        // return;
-        // }
+        if (isUploaded) {
+            log.info("第{}个分片已上传完成", chunkIndex);
+            return;
+        }
 
         byte[] bytes = null;
         try {
@@ -153,24 +155,14 @@ public class MessageServiceImpl implements MessageService {
             log.info("第{}个分片校验成功", chunkIndex);
         }
 
-        // 暂时缓存分块消息到本地
-        // TODO 暂时根据文件名来创建唯一的文件夹
-        String folderName = DigestUtils.md5DigestAsHex((fileChunkInfoDTO.getFilename()).getBytes());
-        String filePath = "G:\\FIleUpload\\" + folderName;
-        try (InputStream is = chunkBlob.getInputStream()) {
-            // 将文件片写入文件夹内,内部会先判断文件夹是否存在
-            FileUtils.forceMkdir(new File(filePath));
-            try (OutputStream os = new FileOutputStream(filePath + "\\" + chunkIndex)) {
-                byte[] buffer = new byte[1024 * 8]; // 8KB 对应前端的文件分块大小 5MB
-                int len;
-                while ((len = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, len);
-                }
-            }
-        } catch (IOException e) {
-            log.error("创建文件夹失败: {}", e.getMessage());
-            throw new RuntimeException(e);
-        }
+        // 根据文件名计算hash值
+        String filenameHash = DigestUtils.md5DigestAsHex((fileChunkInfoDTO.getFilename()).getBytes());
+
+        // 构建minio文件分块路径
+        String minioFileChunkPath = "file-chunk/" + filenameHash + "/" + chunkIndex;
+
+        // 将文件分块文件存入minio中
+        minIOFileStorgeUtil.uploadFileChunk(minioFileChunkPath, chunkBlob);
 
         String key = FILE_CHUNK_INDEX_KEY + fileChunkInfoDTO.getFilename();
         // 分片文件写入成功之后，将分片索引信息写入redis
@@ -184,7 +176,7 @@ public class MessageServiceImpl implements MessageService {
         String key = FILE_CHUNK_INDEX_KEY + filename;
         Set<String> chunkIndices = stringRedisTemplate.opsForZSet().range(key, 0, -1);
         if (chunkIndices == null || chunkIndices.isEmpty()) {
-            // TODO 后期添加从本地查询已上传的分片索引
+            // TODO 后期添加从minio查询已上传的分片索引
             return new ArrayList<>();
         }
         // 将 Set<String> 转换为 List<Integer>
@@ -192,5 +184,17 @@ public class MessageServiceImpl implements MessageService {
         return uploadedIndices;
     }
 
+    @Override
+    public void mergeFile(String filename, Integer fileType, Integer chunkCount) {
+        // 创建存入minio的文件路径
+        String minioFilePath = minIOFileStorgeUtil.buildFilePath(filename);
+        // 分块文件所在路径
+        String minioFileChunkPath = "file-chunk/" + DigestUtils.md5DigestAsHex((filename).getBytes()) + "/";
+        // 合并文件分块
+        minIOFileStorgeUtil.mergeFileChunks(minioFilePath, minioFileChunkPath, chunkCount);
+        // 清除分块文件
+        minIOFileStorgeUtil.clearChunkFlies(minioFileChunkPath, chunkCount);
+        // 合并成功之后将文件信息存入数据库中
+    }
 
 }

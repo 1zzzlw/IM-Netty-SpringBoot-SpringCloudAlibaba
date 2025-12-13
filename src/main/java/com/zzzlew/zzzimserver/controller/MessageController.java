@@ -58,11 +58,11 @@ public class MessageController {
     }
 
     /**
-     * 发生文件消息分块
+     * 上传文件消息分块
      *
      * @return 消息id
      */
-    @Operation(summary = "发生文件消息分块")
+    @Operation(summary = "上传文件消息分块")
     @PostMapping("/uploadChunk")
     public Result<FileMessageVO> uploadFile(@RequestParam("chunkBlob") MultipartFile chunkBlob,
         @ModelAttribute FileChunkInfoDTO fileChunkInfoDTO) {
@@ -83,6 +83,20 @@ public class MessageController {
         log.info("检查文件分块是否上传完成：{}", filename);
         List<Integer> uploadedChunkIndices = messageService.checkUploaded(filename);
         return Result.success(uploadedChunkIndices);
+    }
+
+    /**
+     * 合并文件分块
+     *
+     * @return 合并后的文件消息
+     */
+    @Operation(summary = "合并文件分块")
+    @PostMapping("/merge")
+    public Result<FileMessageVO> mergeFile(@RequestParam("filename") String filename,
+        @RequestParam("fileType") Integer fileType, @RequestParam("chunkCount") Integer chunkCount) {
+        log.info("合并文件分块：{}，文件类型：{}，分块数量：{}", filename, fileType, chunkCount);
+        messageService.mergeFile(filename, fileType, chunkCount);
+        return Result.success();
     }
 
 }

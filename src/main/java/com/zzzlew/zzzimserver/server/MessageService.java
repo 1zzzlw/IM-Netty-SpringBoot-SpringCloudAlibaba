@@ -23,4 +23,6 @@ public interface MessageService {
 
     List<Integer> checkUploaded(String filename);
 
+    void mergeFile(String filename, Integer fileType, Integer chunkCount);
+
 }

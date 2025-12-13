@@ -1,0 +1,31 @@
+package com.zzzlew.zzzimserver.config;
+
+import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.context.annotation.Bean;
+
+import com.zzzlew.zzzimserver.properties.MinIOConfigProperties;
+
+import io.minio.MinioClient;
+import jakarta.annotation.Resource;
+import org.springframework.stereotype.Component;
+
+/**
+ * @Auther: zzzlew
+ * @Date: 2025/12/13 - 12 - 13 - 18:07
+ * @Description: com.zzzlew.zzzimserver.config
+ * @version: 1.0
+ */
+@Component
+@Configurable
+public class MinIOConfig {
+
+    @Resource
+    private MinIOConfigProperties minIOConfigProperties;
+
+    @Bean
+    public MinioClient buildMinioClient() {
+        return MinioClient.builder().endpoint(minIOConfigProperties.getEndpoint())
+            .credentials(minIOConfigProperties.getAccessKey(), minIOConfigProperties.getSecretKey()).build();
+    }
+
+}
