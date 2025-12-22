@@ -66,8 +66,8 @@ public class MessageController {
     @PostMapping("/uploadChunk")
     public Result<FileMessageVO> uploadFile(@RequestParam("chunkBlob") MultipartFile chunkBlob,
         @ModelAttribute FileChunkInfoDTO fileChunkInfoDTO) {
-        log.info("上传文件分块消息的索引：{}，分块哈希值：{}，文件名：{}，是否上传完成：{}", fileChunkInfoDTO.getChunkIndex(),
-            fileChunkInfoDTO.getChunkHash(), fileChunkInfoDTO.getFilename(), fileChunkInfoDTO.getIsUploaded());
+        log.info("上传文件分块消息的索引：{}，分块哈希值：{}，文件md5值：{}", fileChunkInfoDTO.getChunkIndex(), fileChunkInfoDTO.getChunkHash(),
+            fileChunkInfoDTO.getFileHash());
         messageService.uploadFileChunk(chunkBlob, fileChunkInfoDTO);
         return Result.success();
     }
@@ -79,9 +79,9 @@ public class MessageController {
      */
     @Operation(summary = "获取上传成功的文件分块索引列表")
     @GetMapping("/checkUploaded")
-    public Result<List<Integer>> checkUploaded(@RequestParam("filename") String filename) {
-        log.info("检查文件分块是否上传完成：{}", filename);
-        List<Integer> uploadedChunkIndices = messageService.checkUploaded(filename);
+    public Result<List<Integer>> checkUploaded(@RequestParam("fileHash") String fileHash) {
+        log.info("检查文件分块是否上传完成：{}", fileHash);
+        List<Integer> uploadedChunkIndices = messageService.checkUploaded(fileHash);
         return Result.success(uploadedChunkIndices);
     }
 
@@ -92,10 +92,11 @@ public class MessageController {
      */
     @Operation(summary = "合并文件分块")
     @PostMapping("/merge")
-    public Result<FileMessageVO> mergeFile(@RequestParam("filename") String filename,
-        @RequestParam("fileType") Integer fileType, @RequestParam("chunkCount") Integer chunkCount) {
-        log.info("合并文件分块：{}，文件类型：{}，分块数量：{}", filename, fileType, chunkCount);
-        messageService.mergeFile(filename, fileType, chunkCount);
+    public Result<FileMessageVO> mergeFile(@RequestParam("fileHash") String fileHash,
+        @RequestParam("fileName") String fileName, @RequestParam("fileType") Integer fileType,
+        @RequestParam("chunkCount") Integer chunkCount) {
+        log.info("文件Hash：{}，文件名：{}，文件类型：{}，分块数量：{}", fileHash, fileName, fileType, chunkCount);
+        messageService.mergeFile(fileHash, fileName, fileType, chunkCount);
         return Result.success();
     }
 

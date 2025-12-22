@@ -131,12 +131,6 @@ public class MessageServiceImpl implements MessageService {
     public void uploadFileChunk(MultipartFile chunkBlob, FileChunkInfoDTO fileChunkInfoDTO) {
         Integer chunkIndex = fileChunkInfoDTO.getChunkIndex();
         String chunkHash = fileChunkInfoDTO.getChunkHash();
-        boolean isUploaded = fileChunkInfoDTO.getIsUploaded();
-
-        if (isUploaded) {
-            log.info("第{}个分片已上传完成", chunkIndex);
-            return;
-        }
 
         byte[] bytes = null;
         try {
@@ -155,16 +149,16 @@ public class MessageServiceImpl implements MessageService {
             log.info("第{}个分片校验成功", chunkIndex);
         }
 
-        // 根据文件名计算hash值
-        String filenameHash = DigestUtils.md5DigestAsHex((fileChunkInfoDTO.getFilename()).getBytes());
+        // 文件的唯一标识
+        String fileHash = fileChunkInfoDTO.getFileHash();
 
         // 构建minio文件分块路径
-        String minioFileChunkPath = "file-chunk/" + filenameHash + "/" + chunkIndex;
+        String minioFileChunkPath = "file-chunk/" + fileHash + "/" + chunkIndex;
 
         // 将文件分块文件存入minio中
         minIOFileStorgeUtil.uploadFileChunk(minioFileChunkPath, chunkBlob);
 
-        String key = FILE_CHUNK_INDEX_KEY + fileChunkInfoDTO.getFilename();
+        String key = FILE_CHUNK_INDEX_KEY + fileHash;
         // 分片文件写入成功之后，将分片索引信息写入redis
         stringRedisTemplate.opsForZSet().add(key, chunkIndex.toString(), chunkIndex);
         // 设置过期时间
@@ -172,8 +166,8 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<Integer> checkUploaded(String filename) {
-        String key = FILE_CHUNK_INDEX_KEY + filename;
+    public List<Integer> checkUploaded(String fileHash) {
+        String key = FILE_CHUNK_INDEX_KEY + fileHash;
         Set<String> chunkIndices = stringRedisTemplate.opsForZSet().range(key, 0, -1);
         if (chunkIndices == null || chunkIndices.isEmpty()) {
             // TODO 后期添加从minio查询已上传的分片索引
@@ -185,11 +179,11 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void mergeFile(String filename, Integer fileType, Integer chunkCount) {
+    public void mergeFile(String fileHash, String filename, Integer fileType, Integer chunkCount) {
         // 创建存入minio的文件路径
         String minioFilePath = minIOFileStorgeUtil.buildFilePath(filename);
         // 分块文件所在路径
-        String minioFileChunkPath = "file-chunk/" + DigestUtils.md5DigestAsHex((filename).getBytes()) + "/";
+        String minioFileChunkPath = "file-chunk/" + fileHash + "/";
         // 合并文件分块
         minIOFileStorgeUtil.mergeFileChunks(minioFilePath, minioFileChunkPath, chunkCount);
         // 清除分块文件

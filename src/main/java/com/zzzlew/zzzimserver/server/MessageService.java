@@ -21,8 +21,8 @@ public interface MessageService {
 
     void uploadFileChunk(MultipartFile chunkBlob, FileChunkInfoDTO fileChunkInfoDTO);
 
-    List<Integer> checkUploaded(String filename);
+    List<Integer> checkUploaded(String fileHash);
 
-    void mergeFile(String filename, Integer fileType, Integer chunkCount);
+    void mergeFile(String fileHash, String filename, Integer fileType, Integer chunkCount);
 
 }
