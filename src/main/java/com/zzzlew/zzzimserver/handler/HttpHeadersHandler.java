@@ -40,6 +40,7 @@ public class HttpHeadersHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof FullHttpRequest request) {
             try {
+                log.info("检测到 HttpRequest，开始处理");
                 // 获得url路径
                 String uri = request.uri();
                 String token = getToken(uri);

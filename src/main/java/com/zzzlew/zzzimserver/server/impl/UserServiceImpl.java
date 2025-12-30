@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -99,6 +100,9 @@ public class UserServiceImpl implements UserService {
         String friendListKey = USER_FRIEND_LIST_KEY + userId;
         // 登录成功，查询该用户的好友列表，并存入redis中
         List<FriendRelationVO> friendRelationVOList = friendMapper.selectFriendList(userId);
+        if (CollectionUtils.isEmpty(friendRelationVOList)) {
+            return; // 跳过后续操作，避免空集合传入Redis
+        }
         // TODO暂时先只存好友的id，以后有需要在进行扩展或者改善
         Set<String> friendIdSet =
             friendRelationVOList.stream().map(vo -> vo.getId().toString()).collect(Collectors.toSet());
