@@ -11,10 +11,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import java.util.Map;
-
-import static com.zzzlew.zzzimserver.constant.RedisConstant.LOGIN_USER_KEY;
+import static com.zzzlew.zzzimserver.constant.RedisConstant.LOGIN_USERINFO_KEY;
 
 /**
  * @Auther: zzzlew
@@ -51,7 +49,7 @@ public class HttpHeadersHandler extends ChannelInboundHandlerAdapter {
                     return;
                 }
                 log.info("请求路径 {} 中 token 参数值为 {}", uri, token);
-                String tokenKey = LOGIN_USER_KEY + token;
+                String tokenKey = LOGIN_USERINFO_KEY + token;
                 Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(tokenKey);
                 if (userMap.isEmpty()) {
                     log.error("请求路径 {} 中 token 参数值 {} 不存在", uri, token);

@@ -2,9 +2,8 @@ package com.zzzlew.zzzimserver.server;
 
 import com.zzzlew.zzzimserver.pojo.dto.user.UserLoginDTO;
 import com.zzzlew.zzzimserver.pojo.dto.user.UserRegisterDTO;
-import com.zzzlew.zzzimserver.pojo.vo.user.UserLoginVO;
+import com.zzzlew.zzzimserver.pojo.vo.user.UserInfoVO;
 import jakarta.servlet.http.HttpServletResponse;
-
 
 /**
  * @Auther: zzzlew
@@ -14,16 +13,16 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 public interface UserService {
 
-    UserLoginVO login(UserLoginDTO userLoginDTO);
+    UserInfoVO login(UserLoginDTO userLoginDTO, HttpServletResponse response);
 
     void createCode(HttpServletResponse response);
 
-    String register(UserRegisterDTO userRegisterDTO);
+    Long register(UserRegisterDTO userRegisterDTO, HttpServletResponse response);
 
     String createPhoneCode(String phone);
 
     void pendingLogin(String token, Long userId);
 
-    String refreshToken();
+    void refreshToken(Long userId, HttpServletResponse response);
 
 }

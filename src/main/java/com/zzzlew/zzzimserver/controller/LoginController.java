@@ -1,12 +1,10 @@
 package com.zzzlew.zzzimserver.controller;
 
 import org.springframework.web.bind.annotation.*;
-
 import com.zzzlew.zzzimserver.pojo.dto.user.UserLoginDTO;
-import com.zzzlew.zzzimserver.pojo.vo.user.UserLoginVO;
+import com.zzzlew.zzzimserver.pojo.vo.user.UserInfoVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.UserService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -36,14 +34,11 @@ public class LoginController {
      */
     @Operation(summary = "用户登录")
     @PostMapping
-    public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
+    public Result<UserInfoVO> login(@RequestBody UserLoginDTO userLoginDTO, HttpServletResponse response) {
         log.info("当前登录用户信息：{}", userLoginDTO);
-
-        UserLoginVO userLoginVO = userService.login(userLoginDTO);
-
-        log.info("登录成功，当前登录用户信息：{}", userLoginVO);
-
-        return Result.success(userLoginVO);
+        UserInfoVO userInfoVO = userService.login(userLoginDTO, response);
+        log.info("登录成功，当前登录用户信息：{}", userInfoVO);
+        return Result.success(userInfoVO);
     }
 
     /**

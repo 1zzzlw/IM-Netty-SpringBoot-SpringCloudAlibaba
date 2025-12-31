@@ -2,9 +2,7 @@ package com.zzzlew.zzzimserver.config;
 
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
-
 import com.zzzlew.zzzimserver.properties.MinIOConfigProperties;
-
 import io.minio.MinioClient;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;

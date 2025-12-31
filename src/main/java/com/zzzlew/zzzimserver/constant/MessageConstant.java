@@ -6,6 +6,7 @@ package com.zzzlew.zzzimserver.constant;
  * @Description: com.zzzlew.zzzimserver.constant
  * @version: 1.0
  */
+
 /**
  * 信息提示常量类
  */

@@ -1,11 +1,10 @@
 package com.zzzlew.zzzimserver.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
-
 import com.zzzlew.zzzimserver.pojo.dto.user.UserRegisterDTO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.UserService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -34,10 +33,10 @@ public class UserController {
      */
     @Operation(summary = "用户注册")
     @PostMapping("/register")
-    public Result<String> register(@RequestBody UserRegisterDTO userRegisterDTO) {
+    public Result<Long> register(@RequestBody UserRegisterDTO userRegisterDTO, HttpServletResponse response) {
         log.info("注册用户信息为 {}", userRegisterDTO);
-        String token = userService.register(userRegisterDTO);
-        return Result.success(token);
+        Long userId = userService.register(userRegisterDTO, response);
+        return Result.success(userId);
     }
 
     /**

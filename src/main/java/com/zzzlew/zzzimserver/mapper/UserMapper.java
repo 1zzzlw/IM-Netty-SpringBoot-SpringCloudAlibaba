@@ -16,11 +16,11 @@ public interface UserMapper {
      * @return 用户实体类
      */
     @Select("select * from user_auth where account = #{account}")
-    UserAuth getByUsername(String account);
+    UserAuth getByAccount(String account);
 
     /**
      * 插入用户
-     * @param userAuth 用户实体类
+     * @param
      */
     void insertUserAuth(UserAuth userAuth);
 

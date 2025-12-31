@@ -11,10 +11,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import static com.zzzlew.zzzimserver.constant.RedisConstant.USER_FRIEND_LIST_KEY;
 
 /**

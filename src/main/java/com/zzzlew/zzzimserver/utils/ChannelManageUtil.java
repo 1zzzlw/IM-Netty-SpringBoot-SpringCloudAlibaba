@@ -2,7 +2,6 @@ package com.zzzlew.zzzimserver.utils;
 
 import com.zzzlew.zzzimserver.pojo.dto.user.UserBaseDTO;
 import io.netty.channel.Channel;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

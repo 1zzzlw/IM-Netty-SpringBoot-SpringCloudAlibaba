@@ -11,10 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import static com.zzzlew.zzzimserver.constant.RedisConstant.*;
 
 /**
@@ -41,7 +39,7 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         throws Exception {
         System.out.println("Interceptor triggered: " + request.getRequestURI());
         // 获取请求头中的token
-        String token = request.getHeader("Authorization");
+        String token = request.getHeader(jwtproperties.getTokenName());
         log.info("请求头中的token为：{}", token);
 
         // 检查token是否为空
@@ -50,8 +48,15 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        // 解析token判断是否过期
+        if (jwtUtil.parseJWT(jwtproperties.getAccessSecretKey(), token) == null) {
+            // 说明令牌过期
+            response.setStatus(401);
+            return false;
+        }
+
         // redis中键的格式为：login:user:Info:token
-        String tokenKey = LOGIN_USER_KEY + token;
+        String tokenKey = LOGIN_USERINFO_KEY + token;
         // 从redis信息中获取用户信息
         Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(tokenKey);
         // 检查用户信息是否为空,如果为空,说明token过期,只做刷新token在redis中的过期时间操作,不做拦截
@@ -60,27 +65,12 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 从JwtUtil中获取token的过期时间
-        long expirationTime = jwtUtil.getExpirationTime(jwtproperties.getSecretKey(), token);
-
-        if (expirationTime > 0 && expirationTime < 10) {
-            log.info("token快过期，过期时间为：{}", expirationTime);
-            // toekn快过期，返回前端状态码460调用刷新token接口
-            response.setStatus(460);
-            // 中断当前请求，让前端处理刷新token逻辑
-            return false;
-        }
-
-        if (expirationTime <= 0) {
-            throw new RuntimeException("token过期");
-        }
-
         // 将用户信息转为用户基本信息DTO UserBaseDTO
         UserBaseDTO userBaseDTO = BeanUtil.copyProperties(userMap, UserBaseDTO.class);
         // 将用户信息存储到ThreadLocal中
         UserHolder.save(userBaseDTO);
         // 刷新token在redis中的过期时间
-        stringRedisTemplate.expire(tokenKey, LOGIN_USER_KEY_TTL, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(tokenKey, LOGIN_USERINFO_KEY_TTL, TimeUnit.MINUTES);
 
         // 从UserBaseDTO中获取userId
         Long userId = userBaseDTO.getId();

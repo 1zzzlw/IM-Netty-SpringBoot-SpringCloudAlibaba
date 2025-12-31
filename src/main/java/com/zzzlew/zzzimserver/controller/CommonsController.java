@@ -7,20 +7,19 @@ package com.zzzlew.zzzimserver.controller;
  * @version: 1.0
  */
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.UserService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通用控制器类
  */
+@Slf4j
 @RestController
 @RequestMapping("/commons")
 @Tag(name = "通用接口")
@@ -30,10 +29,11 @@ public class CommonsController {
     private UserService userService;
 
     @Operation(summary = "刷新token")
-    @PostMapping("/refreshToken")
-    public Result<String> refreshToken() {
-        String token = userService.refreshToken();
-        return Result.success(token);
+    @PostMapping("/refreshToken/{userId}")
+    public Result<String> refreshToken(@PathVariable("userId") Long userId, HttpServletResponse response) {
+        log.info("用户id为：{} 开始刷新AccessToken", userId);
+        userService.refreshToken(userId, response);
+        return Result.success();
     }
 
 }

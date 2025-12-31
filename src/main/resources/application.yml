@@ -25,9 +25,12 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 jwt:
-  secret-key: qwertyuiopasdfghjklzxcvbnmzzzlew
-  # token过期时间，单位毫秒，默认1年
-  expiration: 31536000000
+  AccessSecret-key: qwertyuiopasdfghjklzxcvbnmqzzzlew
+  FreshSecret-key: freshqwertyuiopzxcvbnmasdfqzzzlew
+  # 短期token过期时间，默认1小时 3600000
+  AccessExpiration: 3600000
+  # token过期时间，单位毫秒，默认1年 31536000000
+  RefreshExpiration: 31536000000
   token-name: Authorization
 mybatis:
   #mapper配置文件

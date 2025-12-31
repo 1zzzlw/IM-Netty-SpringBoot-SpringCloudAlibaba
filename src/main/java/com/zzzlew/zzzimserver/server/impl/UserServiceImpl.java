@@ -10,18 +10,17 @@ import com.zzzlew.zzzimserver.exception.*;
 import com.zzzlew.zzzimserver.mapper.FriendMapper;
 import com.zzzlew.zzzimserver.mapper.UserInfoMapper;
 import com.zzzlew.zzzimserver.mapper.UserMapper;
-import com.zzzlew.zzzimserver.pojo.dto.user.UserBaseDTO;
 import com.zzzlew.zzzimserver.pojo.dto.user.UserLoginDTO;
 import com.zzzlew.zzzimserver.pojo.dto.user.UserRegisterDTO;
 import com.zzzlew.zzzimserver.pojo.entity.UserAuth;
 import com.zzzlew.zzzimserver.pojo.entity.UserInfo;
 import com.zzzlew.zzzimserver.pojo.vo.friend.FriendRelationVO;
-import com.zzzlew.zzzimserver.pojo.vo.user.UserLoginVO;
+import com.zzzlew.zzzimserver.pojo.vo.user.UserInfoVO;
 import com.zzzlew.zzzimserver.properties.Jwtproperties;
+import com.zzzlew.zzzimserver.result.TokenResult;
 import com.zzzlew.zzzimserver.server.UserService;
 import com.zzzlew.zzzimserver.utils.JwtUtil;
 import com.zzzlew.zzzimserver.utils.RegexUtils;
-import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -64,12 +63,12 @@ public class UserServiceImpl implements UserService {
     private JwtUtil jwtUtil;
 
     @Override
-    public UserLoginVO login(UserLoginDTO userLoginDTO) {
+    public UserInfoVO login(UserLoginDTO userLoginDTO, HttpServletResponse response) {
         String account = userLoginDTO.getAccount();
         String password = userLoginDTO.getPassword();
         String verifyCode = userLoginDTO.getVerifyCode();
 
-        UserAuth userAuth = userMapper.getByUsername(account);
+        UserAuth userAuth = userMapper.getByAccount(account);
 
         if (userAuth == null) {
             // 账号不存在
@@ -87,13 +86,20 @@ public class UserServiceImpl implements UserService {
             throw new PasswordErrorException(MessageConstant.VERIFYCODE_ERROR);
         }
 
+        // 构建用户信息对象
+        UserInfoVO userInfoVO = UserInfoVO.builder().id(userAuth.getUserId()).username(userAuth.getUsername())
+            .avatar(userAuth.getAvatar()).onLine(1).account(userAuth.getAccount()).build();
+
         // 生成并存储token
-        UserLoginVO userLoginVO = generateAndStoreWithUpdateToken(userAuth);
+        TokenResult tokenResult = generateAndStoreWithUpdateToken(userInfoVO);
+
+        response.setHeader("Authorization", "Bearer " + tokenResult.getAccessToken());
+        response.setHeader("refreshtoken", tokenResult.getRefreshToken());
 
         Long userId = userAuth.getUserId();
         storeFriendListId(userId);
 
-        return userLoginVO;
+        return userInfoVO;
     }
 
     private void storeFriendListId(Long userId) {
@@ -155,7 +161,7 @@ public class UserServiceImpl implements UserService {
      */
     @Transactional
     @Override
-    public String register(UserRegisterDTO userRegisterDTO) {
+    public Long register(UserRegisterDTO userRegisterDTO, HttpServletResponse response) {
         // 随机生成一个不会重复的账号
         long timestamp = System.currentTimeMillis();
         String randomStr = RandomUtil.randomString(4);
@@ -171,13 +177,20 @@ public class UserServiceImpl implements UserService {
         // 获取insert语句生成的用户详细信息表中的主键
         Long userId = userInfo.getId();
 
+        UserInfoVO userInfoVO = BeanUtil.copyProperties(userRegisterDTO, UserInfoVO.class);
         UserAuth userAuth = BeanUtil.copyProperties(userRegisterDTO, UserAuth.class);
+        userInfoVO.setId(userId);
+        userInfoVO.setOnLine(1);
         userAuth.setUserId(userId);
         userMapper.insertUserAuth(userAuth);
         log.info("主要用户信息：{}", userAuth);
         // 生成并存储用户登录信息在redis中
-        UserLoginVO userLoginVO = generateAndStoreWithUpdateToken(userAuth);
-        return userLoginVO.getToken();
+        TokenResult tokenResult = generateAndStoreWithUpdateToken(userInfoVO);
+
+        response.setHeader("Authorization", "Bearer " + tokenResult.getAccessToken());
+        response.setHeader("refreshtoken", tokenResult.getRefreshToken());
+
+        return userId;
     }
 
     /**
@@ -216,80 +229,108 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void pendingLogin(String token, Long userId) {
-        // 校验token是否存在
-        String tokenInfoKey = LOGIN_USER_KEY + token;
         // 判断token是否过期
-        if (jwtUtil.isTokenExpired(jwtproperties.getSecretKey(), token)) {
+        if (jwtUtil.parseJWT(jwtproperties.getFreshSecretKey(), token) == null) {
             throw new TokenExpiredException(MessageConstant.TOKEN_EXPIRED);
         }
-        // 校验token是否存在
-        Boolean hasKey = stringRedisTemplate.hasKey(tokenInfoKey);
-        if (!hasKey) {
-            throw new TokenNotFoundException(MessageConstant.TOKEN_NOT_FOUND);
-        }
-
         storeFriendListId(userId);
     }
 
     @Override
-    public String refreshToken() {
-        // 拿到当前登录用户的信息
-        UserBaseDTO user = UserHolder.getUser();
-        log.info("刷新token时当前登录用户信息：{}", user);
-        UserAuth userAuth = UserAuth.builder().userId(user.getId()).username(user.getUsername())
-            .account(user.getAccount()).avatar(user.getAvatar()).build();
-        UserLoginVO userLoginVO = generateAndStoreWithUpdateToken(userAuth);
-        return userLoginVO.getToken();
+    public void refreshToken(Long userId, HttpServletResponse response) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(JwtClaimsConstant.USER_ID, userId);
+        String newToken =
+            jwtUtil.createJWT(jwtproperties.getAccessSecretKey(), jwtproperties.getAccessExpiration(), claims);
+
+        String userKey = LOGIN_USER_TOKEN_LIST_KEY + userId;
+        // 通过用户id拿到redis中的旧token
+        Set<String> okdTokens = stringRedisTemplate.opsForSet().members(userKey);
+        // 检查是否存在旧token
+        if (okdTokens != null && !okdTokens.isEmpty()) {
+            for (String oldToken : okdTokens) {
+                // 遍历旧token列表，看哪个token作为键在redis缓存中有用户信息
+                String oldTokenKey = LOGIN_USERINFO_KEY + oldToken;
+                Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(oldTokenKey);
+
+                if (!userMap.isEmpty()) {
+                    // 用户信息不为空，此时这个oldToken中就是上一次使用的token
+                    String newTokenKey = LOGIN_USERINFO_KEY + newToken;
+                    stringRedisTemplate.opsForHash().putAll(newTokenKey, userMap);
+                    // 设置过期时间
+                    stringRedisTemplate.expire(newTokenKey, LOGIN_USERINFO_KEY_TTL, TimeUnit.MINUTES);
+                    // 删除旧token对应的用户信息
+                    stringRedisTemplate.delete(oldTokenKey);
+                }
+            }
+        }
+        // 清空旧的token集合
+        stringRedisTemplate.delete(userKey);
+
+        // 4. 添加新token到用户token集合
+        stringRedisTemplate.opsForSet().add(userKey, newToken);
+        stringRedisTemplate.expire(userKey, LOGIN_USER_TOKEN_LIST_KEY_TTL, TimeUnit.MINUTES);
+
+        response.setHeader("Authorization", "Bearer " + newToken);
     }
 
-    public UserLoginVO generateAndStoreWithUpdateToken(UserAuth userAuth) {
-        // 生成Token令牌并返回
+    public TokenResult generateAndStoreWithUpdateToken(UserInfoVO userInfoVO) {
+        // 生成短期token和长期token设置在响应头中
         Map<String, Object> claims = new HashMap<>();
-        claims.put(JwtClaimsConstant.USER_ID, userAuth.getUserId());
-        String token = jwtUtil.createJWT(jwtproperties.getSecretKey(), jwtproperties.getExpiration(), claims);
-
-        Long userId = userAuth.getUserId();
+        Long userId = userInfoVO.getId();
         log.info("当前登录用户id：{}", userId);
+        claims.put(JwtClaimsConstant.USER_ID, userId);
+        // 生成长期token
+        String refreshToken =
+            jwtUtil.createJWT(jwtproperties.getFreshSecretKey(), jwtproperties.getRefreshExpiration(), claims);
+        // 生成短期token
+        String accessToken =
+            jwtUtil.createJWT(jwtproperties.getAccessSecretKey(), jwtproperties.getAccessExpiration(), claims);
+
         String userKey = LOGIN_USER_TOKEN_LIST_KEY + userId;
-        // 首先检查该用户id下是否有已登录的token
+        // 首先检查该用户id下是否有已登录的短期token数据集合
         Set<String> oldTokens = stringRedisTemplate.opsForSet().members(userKey);
+        // 如果不存在，需要考虑之前的用户信息是否需要清空，因为token不一样会导致垃圾数据堆积
         if (oldTokens != null && !oldTokens.isEmpty()) {
-            // // 遍历集合，拿到每个旧token，或者直接批量处理
-            // for (String oldToken : oldTokens) {
-            // // 删除单个旧token对应的用户信息（token为key的hash）
-            // stringRedisTemplate.delete(LOGIN_USER_KEY + oldToken);
-            // }
             // 将旧Token转换为对应的用户信息key集合
-            // 遍历删除可能影响效率，考虑批量删除
+            // 遍历删除可能影响效率，考虑批量删除，一次删除多个token对应的用户信息
             Collection<String> oldTokenInfoKeys =
-                oldTokens.stream().map(oldToken -> LOGIN_USER_KEY + oldToken).collect(Collectors.toList());
-            // 批量删除（一次请求搞定）
+                oldTokens.stream().map(oldToken -> LOGIN_USERINFO_KEY + oldToken).collect(Collectors.toList());
+            Collection<String> oldRefreshTokenInfoKeys = oldTokens.stream()
+                .map(oldToken -> LOGIN_USERINFO_REFRESHTOKEN_KEY + oldToken).collect(Collectors.toList());
+            // 批量删除
             stringRedisTemplate.delete(oldTokenInfoKeys);
-            // 再删除这个Set集合本身（旧token列表）
+            stringRedisTemplate.delete(oldRefreshTokenInfoKeys);
+            // 再删除这个Set集合本身
             stringRedisTemplate.delete(userKey);
         }
 
         // 存储userId为键的所有用户的token信息
-        stringRedisTemplate.opsForSet().add(userKey, token);
+        stringRedisTemplate.opsForSet().add(userKey, accessToken);
+        stringRedisTemplate.opsForSet().add(userKey, refreshToken);
         // 设置有效期
         stringRedisTemplate.expire(userKey, LOGIN_USER_TOKEN_LIST_KEY_TTL, TimeUnit.MINUTES);
 
-        UserLoginVO userLoginVO = UserLoginVO.builder().id(userAuth.getUserId()).username(userAuth.getUsername())
-            .token(token).avatar(userAuth.getAvatar()).onLine(1).account(userAuth.getAccount()).build();
-
         // 将用户信息转为map集合
-        Map<String, Object> map =
-            BeanUtil.beanToMap(userLoginVO, new HashMap<>(), CopyOptions.create().setIgnoreNullValue(true)
-                .setIgnoreProperties("token").setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
+        Map<String, Object> map = BeanUtil.beanToMap(userInfoVO, new HashMap<>(), CopyOptions.create()
+            .setIgnoreNullValue(true).setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
 
         // redis中键的格式为：login:user:token
-        String tokenKey = LOGIN_USER_KEY + token;
-
+        String tokenKey = LOGIN_USERINFO_KEY + accessToken;
+        String refreshTokenKey = LOGIN_USERINFO_REFRESHTOKEN_KEY + refreshToken;
         // 将用户信息存储到redis中
         stringRedisTemplate.opsForHash().putAll(tokenKey, map);
         // 设置有效期
-        stringRedisTemplate.expire(tokenKey, LOGIN_USER_KEY_TTL, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(tokenKey, LOGIN_USERINFO_KEY_TTL, TimeUnit.MINUTES);
 
-        return userLoginVO;
+        stringRedisTemplate.opsForHash().putAll(refreshTokenKey, map);
+        stringRedisTemplate.expire(refreshTokenKey, LOGIN_USERINFO_REFRESHTOKEN_KEY_TTL, TimeUnit.MINUTES);
+
+        TokenResult tokenResult = new TokenResult();
+        tokenResult.setAccessToken(accessToken);
+        tokenResult.setRefreshToken(refreshToken);
+
+        return tokenResult;
     }
+
 }

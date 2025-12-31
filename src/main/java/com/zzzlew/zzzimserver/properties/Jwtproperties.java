@@ -14,7 +14,26 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "jwt")
 public class Jwtproperties {
-    private String secretKey;
-    private Long expiration;
+    /**
+     * JWT 短Token密钥
+     */
+    private String AccessSecretKey;
+
+    /**
+     * JWT 刷新Token密钥
+     */
+    private String FreshSecretKey;
+
+    /**
+     * 短期token过期时间，默认1小时
+     */
+    private Long AccessExpiration;
+    /**
+     * 长期token过期时间，默认1年
+     */
+    private Long RefreshExpiration;
+    /**
+     * token名称，默认Authorization
+     */
     private String tokenName;
 }

@@ -7,7 +7,6 @@ package com.zzzlew.zzzimserver.constant;
  * @version: 1.0
  */
 public abstract class RegexPatterns {
-
     /**
      * 手机号正则
      */

@@ -1,7 +1,6 @@
 package com.zzzlew.zzzimserver.pojo.dto.user;
 
 import lombok.Data;
-
 import java.io.Serializable;
 
 /**

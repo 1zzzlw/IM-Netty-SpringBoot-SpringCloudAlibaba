@@ -2,7 +2,6 @@ package com.zzzlew.zzzimserver.pojo.dto.user;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
 import java.io.Serializable;
 
 /**

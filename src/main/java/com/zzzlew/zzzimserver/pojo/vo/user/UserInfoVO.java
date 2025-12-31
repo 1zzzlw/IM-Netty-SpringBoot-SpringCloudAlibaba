@@ -13,7 +13,7 @@ import java.io.Serializable;
  */
 @Builder
 @Data
-public class UserLoginVO implements Serializable {
+public class UserInfoVO implements Serializable {
 
     private Long id;
 
@@ -25,6 +25,4 @@ public class UserLoginVO implements Serializable {
 
     // 是否在线 0-不在线 1-在线
     private Integer onLine;
-
-    private String token;
 }

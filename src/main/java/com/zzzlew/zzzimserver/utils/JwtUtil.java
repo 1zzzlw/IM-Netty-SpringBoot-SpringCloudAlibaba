@@ -1,10 +1,10 @@
 package com.zzzlew.zzzimserver.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -16,6 +16,7 @@ import java.util.Map;
  * @Description: com.zzzlew.zzzimserver.utils
  * @version: 1.0
  */
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -35,30 +36,18 @@ public class JwtUtil {
 
     // 解析token
     public Claims parseJWT(String secretKey, String token) {
-        Claims claims =
-            Jwts.parser().setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)).parseClaimsJws(token).getBody();
-        return claims;
-    }
-
-    // 校验token是否过期
-    public boolean isTokenExpired(String secretKey, String token) {
-        Claims claims = parseJWT(secretKey, token);
-        Date expiration = claims.getExpiration();
-        // 获取当前时间
-        Date now = new Date();
-        // 如果过期时间在当前时间之前，则token过期
-        return expiration.before(now);
-    }
-
-    // token的距离过期还剩多长时间
-    public long getExpirationTime(String secretKey, String token) {
-        Claims claims = parseJWT(secretKey, token);
-        Date expiration = claims.getExpiration();
-        // 获取当前时间
-        Date now = new Date();
-        // 过期时间减去当前时间，就是距离过期还剩多长时间
-        long remainMinutes = (expiration.getTime() - now.getTime()) / 60000;
-        return remainMinutes;
+        try {
+            Claims claims =
+                Jwts.parser().setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)).parseClaimsJws(token).getBody();
+            return claims;
+        } catch (ExpiredJwtException e) {
+            log.error("JWT令牌过期");
+            return null;
+        } catch (Exception e) {
+            // 处理其他JWT异常
+            log.error("JWT解析失败：{}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "token无效");
+        }
     }
 
 }
