@@ -15,4 +15,13 @@
         WHERE group_id = #{conversationId};
     </update>
 
+    <select id="selectGroupConversationListByConversationIdList"
+            resultType="com.zzzlew.zzzimserver.pojo.entity.GroupConversation">
+        select id, group_name, group_avatar, member_count
+        from group_conversation
+        where id in
+        <foreach collection="groupIdList" item="groupId" open="(" close=")" separator=",">
+            #{groupId}
+        </foreach>
+    </select>
 </mapper>

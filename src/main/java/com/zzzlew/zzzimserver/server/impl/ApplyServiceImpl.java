@@ -74,8 +74,15 @@ public class ApplyServiceImpl implements ApplyService {
             Long toUserId = UserHolder.getUser().getId();
             Long fromUserId = dealApplyDTO.getFromUserId();
 
-            // TODO 同意添加好友，调用发送信息接口，就是发送一个打招呼信息
+            // TODO 先添加和好友的会话，后续在添加自动发送消息的功能
 
+            String conversationId = toUserId > fromUserId ? String.format("%d_%d", toUserId, fromUserId)
+                : String.format("%d_%d", fromUserId, toUserId);
+
+            // 插入会话表
+            conversationMapper.insertConversation(conversationId, toUserId, fromUserId, 0);
+
+            conversationMapper.insertConversation(conversationId, fromUserId, toUserId, 0);
 
             // 插入好友关系表
             friendMapper.addFriendToRelation(toUserId, fromUserId);

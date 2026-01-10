@@ -13,7 +13,9 @@ import java.io.Serializable;
 @Data
 public class FriendRelationVO implements Serializable {
 
-    private Long id;
+    private Long userId;
+
+    private Long friendId;
 
     private String username;
 

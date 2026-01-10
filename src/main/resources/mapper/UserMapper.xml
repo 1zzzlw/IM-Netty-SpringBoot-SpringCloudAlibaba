@@ -8,4 +8,12 @@
         values (#{userId}, #{username}, #{account}, #{password}, #{avatar})
     </insert>
 
+    <select id="selectUserAuthListByUserIdList"
+            resultType="com.zzzlew.zzzimserver.pojo.entity.UserAuth">
+        select user_id, username, avatar from user_auth where user_id in
+        <foreach collection="targetUserIdList" item="userId" open="(" close=")" separator=",">
+            #{userId}
+        </foreach>
+    </select>
+
 </mapper>

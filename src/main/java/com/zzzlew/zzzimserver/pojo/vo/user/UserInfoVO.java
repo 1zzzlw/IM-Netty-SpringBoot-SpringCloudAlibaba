@@ -14,7 +14,6 @@ import java.io.Serializable;
 @Builder
 @Data
 public class UserInfoVO implements Serializable {
-
     private Long id;
 
     private String username;

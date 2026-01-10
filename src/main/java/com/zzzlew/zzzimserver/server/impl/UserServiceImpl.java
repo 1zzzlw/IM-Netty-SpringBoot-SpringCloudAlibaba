@@ -111,7 +111,7 @@ public class UserServiceImpl implements UserService {
         }
         // TODO暂时先只存好友的id，以后有需要在进行扩展或者改善
         Set<String> friendIdSet =
-            friendRelationVOList.stream().map(vo -> vo.getId().toString()).collect(Collectors.toSet());
+            friendRelationVOList.stream().map(vo -> vo.getFriendId().toString()).collect(Collectors.toSet());
         // 将好友列表存储到redis中
         stringRedisTemplate.opsForSet().add(friendListKey, friendIdSet.toArray(new String[0]));
         // 设置好友列表的过期时间

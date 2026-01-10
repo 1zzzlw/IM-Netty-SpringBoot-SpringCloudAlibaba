@@ -3,6 +3,16 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.zzzlew.zzzimserver.mapper.MessageMapper">
 
+    <select id="selectMessageList" resultType="com.zzzlew.zzzimserver.pojo.entity.message"
+            parameterType="java.util.List">
+        select * from message
+        where conversation_id in
+        <foreach collection="conversationIdList" item="conversationId" open="(" close=")"
+                 separator=",">
+            #{conversationId}
+        </foreach>
+    </select>
+
     <insert id="saveMessage"
             parameterType="com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO">
         insert into message (conversation_id, sender_id, receiver_id, content, msg_type)
@@ -13,7 +23,9 @@
             parameterType="java.lang.String">
         select *
         from message
-        where conversation_id = #{conversationId} order by send_time
+        where conversation_id = #{conversationId}
+        order by send_time
     </select>
+
 
 </mapper>

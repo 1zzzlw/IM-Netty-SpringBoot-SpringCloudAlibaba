@@ -14,11 +14,11 @@ import java.util.List;
 public interface FriendService {
 
     /**
-     * 获取好友列表
+     * 初始化好友列表
      * 
      * @return 好友列表
      */
-    List<FriendRelationVO> getFriendList();
+    List<FriendRelationVO> initFriendList();
 
     /**
      * 搜索用户

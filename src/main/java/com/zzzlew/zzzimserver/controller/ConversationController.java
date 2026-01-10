@@ -4,7 +4,6 @@ import com.zzzlew.zzzimserver.pojo.dto.apply.DealGroupDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.GroupApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
-import com.zzzlew.zzzimserver.pojo.vo.conversation.GroupConversationVO;
 import com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.ApplyService;
@@ -14,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,16 +35,16 @@ public class ConversationController {
     private ApplyService applyService;
 
     /**
-     * 获取会话列表
+     * 初始化界面时获取mysql内大量会话列表加载到前端本地数据库中
      *
      * @return 会话列表
      */
-    @Operation(summary = "获取会话列表")
-    @GetMapping("/list/{conversationId}")
-    public Result<List<ConversationVO>> getConversationList(@PathVariable String conversationId) {
-        List<String> conversationIdList = Arrays.asList(conversationId.split(","));
-        log.info("会话ID列表：{}", conversationIdList);
-        List<ConversationVO> conversationVOList = conversationService.getConversationList(conversationIdList);
+    @Operation(summary = "初始化会话列表")
+    @GetMapping("/init/list")
+    public Result<List<ConversationVO>> initConversationList() {
+        log.info("初始化会话列表");
+        List<ConversationVO> conversationVOList = conversationService.initConversationList();
+        log.info("会话列表：{}", conversationVOList);
         return Result.success(conversationVOList);
     }
 
@@ -89,18 +89,6 @@ public class ConversationController {
         log.info("处理群聊申请：{}", dealGroupDTO);
         applyService.dealGroupApply(dealGroupDTO);
         return Result.success();
-    }
-
-    /**
-     * 获取群聊列表
-     *
-     * @return 群聊列表
-     */
-    @Operation(summary = "获取群聊列表")
-    @GetMapping("/groupList")
-    public Result<List<GroupConversationVO>> getGroupConversationList() {
-        List<GroupConversationVO> groupConversationVOList = conversationService.getGroupConversationList();
-        return Result.success(groupConversationVOList);
     }
 
     /**

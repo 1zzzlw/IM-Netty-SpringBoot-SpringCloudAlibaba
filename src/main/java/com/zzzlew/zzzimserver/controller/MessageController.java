@@ -30,6 +30,19 @@ public class MessageController {
     private MessageService messageService;
 
     /**
+     * 初始化消息列表
+     * 
+     * @return 消息列表
+     */
+    @Operation(summary = "初始化消息列表")
+    @GetMapping("/init/list/{conversationIds}")
+    public Result<List<MessageVO>> initMessageList(@PathVariable String conversationIds) {
+        log.info("对话id为：{}", conversationIds);
+        List<MessageVO> messageVOList = messageService.initMessageList(conversationIds);
+        return Result.success(messageVOList);
+    }
+
+    /**
      * 发送消息
      * 
      * @return 消息id

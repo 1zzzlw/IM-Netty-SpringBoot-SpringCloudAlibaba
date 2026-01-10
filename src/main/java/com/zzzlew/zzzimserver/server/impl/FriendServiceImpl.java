@@ -29,7 +29,7 @@ public class FriendServiceImpl implements FriendService {
     private UserInfoMapper userInfoMapper;
 
     @Override
-    public List<FriendRelationVO> getFriendList() {
+    public List<FriendRelationVO> initFriendList() {
         // 获得当前登录用户的信息
         UserBaseDTO userBaseDTO = UserHolder.getUser();
         // 获取当前用户id

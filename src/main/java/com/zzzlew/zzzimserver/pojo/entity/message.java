@@ -1,4 +1,4 @@
-package com.zzzlew.zzzimserver.pojo.vo.message;
+package com.zzzlew.zzzimserver.pojo.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -8,12 +8,17 @@ import java.time.LocalDateTime;
 
 /**
  * @Auther: zzzlew
- * @Date: 2025/11/16 - 11 - 16 - 13:07
- * @Description: com.zzzlew.zzzimserver.pojo.vo.message
+ * @Date: 2026/1/10 - 01 - 10 - 15:50
+ * @Description: com.zzzlew.zzzimserver.pojo.entity
  * @version: 1.0
  */
 @Data
-public class MessageVO implements Serializable {
+public class message implements Serializable {
+
+    /**
+     * 主键
+     */
+    private Long id;
 
     /**
      * 会话id
@@ -21,12 +26,12 @@ public class MessageVO implements Serializable {
     private String conversationId;
 
     /**
-     * 发送者id
+     * 发送人id
      */
     private Long senderId;
 
     /**
-     * 接收者id
+     * 接收人id
      */
     private Long receiverId;
 
@@ -41,7 +46,7 @@ public class MessageVO implements Serializable {
     private String content;
 
     /**
-     * 发送状态
+     * 发送状态 0：发送中 1：发送成功 2：发送失败
      */
     private Integer sendStatus;
 

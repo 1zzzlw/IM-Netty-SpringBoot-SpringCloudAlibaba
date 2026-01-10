@@ -6,6 +6,7 @@ import com.zzzlew.zzzimserver.mapper.GroupConversationMapper;
 import com.zzzlew.zzzimserver.mapper.MessageMapper;
 import com.zzzlew.zzzimserver.pojo.dto.message.FileChunkInfoDTO;
 import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
+import com.zzzlew.zzzimserver.pojo.entity.message;
 import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
 import com.zzzlew.zzzimserver.server.MessageService;
 import com.zzzlew.zzzimserver.utils.MinIOFileStorgeUtil;
@@ -49,6 +50,23 @@ public class MessageServiceImpl implements MessageService {
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private MinIOFileStorgeUtil minIOFileStorgeUtil;
+
+    @Override
+    public List<MessageVO> initMessageList(String conversationIds) {
+        List<String> conversationIdList = List.of(conversationIds.split(","));
+        // 查询会话内的消息列表
+        List<message> messageList = messageMapper.selectMessageList(conversationIdList);
+
+        List<MessageVO> messageVOList = new ArrayList<>();
+
+        // 转换为消息VO列表
+        for (message message : messageList) {
+            MessageVO messageVO = BeanUtil.copyProperties(message, MessageVO.class);
+            messageVOList.add(messageVO);
+        }
+
+        return messageVOList;
+    }
 
     @Transactional
     @Override

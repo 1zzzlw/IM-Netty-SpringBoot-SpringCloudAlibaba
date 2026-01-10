@@ -3,16 +3,12 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.zzzlew.zzzimserver.mapper.ConversationMapper">
 
-    <select id="selectListByUserIdAndConversationIdList"
-            resultType="com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO">
-        select * from conversation c where c.user_id = #{userId} and c.id in
-        <foreach collection="conversationIdList"
-                 item="cId"
-                 open="("
-                 close=")"
-                 separator=",">
-            #{cId}
-        </foreach>
+    <select id="selectListByUserId"
+            resultType="com.zzzlew.zzzimserver.pojo.entity.Conversation">
+        select *
+        from conversation c
+        where c.user_id = #{userId}
+          and c.status = 1
     </select>
 
     <update id="updateConversationStatus">
@@ -40,22 +36,6 @@
         where id = #{conversationId}
     </update>
 
-    <select id="selectGroupListByUserIdAndConversationId"
-            resultType="com.zzzlew.zzzimserver.pojo.vo.conversation.GroupConversationVO">
-        select gc.id,
-               gc.group_name,
-               gc.group_avatar,
-               gc.owner_id,
-               gm.is_top,
-               gm.latest_msg,
-               gm.latest_msg_time,
-               gm.unread_count,
-               gm.status
-        from group_member gm
-                 join group_conversation gc on gc.id = gm.group_id
-        where gm.user_id = #{userId}
-    </select>
-
     <select id="selectGroupMemberListByConversationId"
             resultType="com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO"
             parameterType="java.lang.String">
@@ -65,5 +45,11 @@
                                       ua.user_id
         where gm.group_id = #{conversationId}
     </select>
+
+    <insert id="insertConversation">
+        insert into conversation (id, user_id, target_id, type)
+        values (#{conversationId}, #{toUserId}, #{fromUserId}, #{type})
+    </insert>
+
 
 </mapper>

@@ -1,5 +1,6 @@
 server:
   port: 8080
+#自定义编码器的序列化算法
 serializer:
   algorithm: Json
 spring:
@@ -19,6 +20,7 @@ spring:
           max-idle: 10
           min-idle: 1
           time-between-eviction-runs: 10s
+  # 文件传输配置
   servlet:
     multipart:
       enabled: true

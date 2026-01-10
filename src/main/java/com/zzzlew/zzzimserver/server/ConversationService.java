@@ -1,7 +1,6 @@
 package com.zzzlew.zzzimserver.server;
 
 import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
-import com.zzzlew.zzzimserver.pojo.vo.conversation.GroupConversationVO;
 import com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO;
 
 import java.util.List;
@@ -13,13 +12,26 @@ import java.util.List;
  * @version: 1.0
  */
 public interface ConversationService {
+    /**
+     * 初始化会话列表
+     *
+     * @return 会话列表
+     */
+    List<ConversationVO> initConversationList();
 
-    List<ConversationVO> getConversationList(List<String> conversationIdList);
-
-    List<GroupConversationVO> getGroupConversationList();
-
+    /**
+     * 获取群成员列表
+     *
+     * @param conversationId 会话id
+     * @return 群成员列表
+     */
     List<GroupMemberVO> getGroupMemberList(String conversationId);
 
+    /**
+     * 清空会话未读消息数量
+     *
+     * @param conversationId 会话id
+     */
     void clearConversationUnreadCounts(String conversationId);
 
 }

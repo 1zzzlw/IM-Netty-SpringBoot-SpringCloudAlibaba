@@ -3,6 +3,8 @@ package com.zzzlew.zzzimserver.mapper;
 import com.zzzlew.zzzimserver.pojo.entity.UserAuth;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * @Auther: zzzlew
  * @Date: 2025/11/6 - 11 - 06 - 23:09
@@ -12,6 +14,7 @@ import org.apache.ibatis.annotations.Select;
 public interface UserMapper {
     /**
      * 根据账号查询用户
+     * 
      * @param account 账号
      * @return 用户实体类
      */
@@ -20,8 +23,17 @@ public interface UserMapper {
 
     /**
      * 插入用户
+     * 
      * @param
      */
     void insertUserAuth(UserAuth userAuth);
+
+    /**
+     * 根据用户ID列表查询用户
+     * 
+     * @param targetUserIdList 用户ID列表
+     * @return 用户实体类列表
+     */
+    List<UserAuth> selectUserAuthListByUserIdList(List<Long> targetUserIdList);
 
 }

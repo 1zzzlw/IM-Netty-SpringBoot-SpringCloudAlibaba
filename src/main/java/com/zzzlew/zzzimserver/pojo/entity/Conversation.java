@@ -1,49 +1,38 @@
-package com.zzzlew.zzzimserver.pojo.vo.conversation;
+package com.zzzlew.zzzimserver.pojo.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * @Auther: zzzlew
- * @Date: 2025/11/21 - 11 - 21 - 21:30
- * @Description: com.zzzlew.zzzimserver.pojo.vo.conversation
+ * @Date: 2026/1/9 - 01 - 09 - 22:52
+ * @Description: com.zzzlew.zzzimserver.pojo.entity
  * @version: 1.0
  */
 @Data
-@Builder
-public class ConversationVO {
+public class Conversation implements Serializable {
     /**
      * 会话ID
      */
     private String id;
 
     /**
-     * 用户id
+     * 用户ID
      */
     private Long userId;
-
-    /**
-     * 用户名/群聊名称
-     */
-    private String name;
-
-    /**
-     * 备注
-     */
-    private String remark;
-
-    /**
-     * 用户头像/群聊头像
-     */
-    private String avatar;
 
     /**
      * 目标id
      */
     private String targetId;
+
+    /**
+     * 会话备注
+     */
+    private String remark;
 
     /**
      * 会话类型

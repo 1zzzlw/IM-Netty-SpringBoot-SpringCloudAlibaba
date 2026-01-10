@@ -33,11 +33,11 @@ public class FriendController {
      * 
      * @return 好友列表
      */
-    @Operation(summary = "获取好友列表")
-    @GetMapping("/list")
-    public Result<List<FriendRelationVO>> getFriendList() {
-        log.info("获取好友列表");
-        List<FriendRelationVO> friendRelationVOList = friendService.getFriendList();
+    @Operation(summary = "初始化好友列表")
+    @GetMapping("/init/list")
+    public Result<List<FriendRelationVO>> initFriendList() {
+        log.info("初始化好友列表");
+        List<FriendRelationVO> friendRelationVOList = friendService.initFriendList();
         return Result.success(friendRelationVOList);
     }
 
