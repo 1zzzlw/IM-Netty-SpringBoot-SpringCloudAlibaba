@@ -13,10 +13,24 @@ import java.io.Serializable;
 @Data
 public class MessageDTO implements Serializable {
 
+    /**
+     * 消息id
+     */
+    private Long id;
+
+    /**
+     * 会话id
+     */
     private String conversationId;
 
+    /**
+     * 发送者id
+     */
     private Long senderId;
 
+    /**
+     * 接收者id
+     */
     private Long receiverId;
 
     /**
@@ -24,6 +38,9 @@ public class MessageDTO implements Serializable {
      */
     private Integer msgType;
 
+    /**
+     * 消息内容
+     */
     private String content;
 
 }

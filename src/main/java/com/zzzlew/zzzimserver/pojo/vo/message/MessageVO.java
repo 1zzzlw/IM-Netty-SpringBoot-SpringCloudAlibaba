@@ -1,6 +1,8 @@
 package com.zzzlew.zzzimserver.pojo.vo.message;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -14,6 +16,12 @@ import java.time.LocalDateTime;
  */
 @Data
 public class MessageVO implements Serializable {
+
+    /**
+     * 消息id
+     */
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long id;
 
     /**
      * 会话id

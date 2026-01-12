@@ -1,6 +1,7 @@
 package com.zzzlew.zzzimserver.server.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.IdUtil;
 import com.zzzlew.zzzimserver.mapper.ConversationMapper;
 import com.zzzlew.zzzimserver.mapper.GroupConversationMapper;
 import com.zzzlew.zzzimserver.mapper.MessageMapper;
@@ -73,6 +74,7 @@ public class MessageServiceImpl implements MessageService {
     public MessageVO sendMessage(MessageDTO messageDTO) {
         // 获取当前登录用户id
         Long userId = UserHolder.getUser().getId();
+        messageDTO.setId(IdUtil.getSnowflakeNextId());
         messageDTO.setSenderId(userId);
         String conversationId = messageDTO.getConversationId();
 
