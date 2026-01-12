@@ -14,7 +14,7 @@ import java.util.List;
 public interface FriendService {
 
     /**
-     * 初始化好友列表
+     * 全量更新并初始化好友列表
      * 
      * @return 好友列表
      */

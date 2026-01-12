@@ -16,4 +16,11 @@
         </foreach>
     </select>
 
+    <select id="selectUserInfoById" resultType="com.zzzlew.zzzimserver.pojo.entity.UserAuth"
+            parameterType="java.lang.Long">
+        select user_id, username, avatar, account
+        from user_auth
+        where user_id = #{userId}
+    </select>
+
 </mapper>

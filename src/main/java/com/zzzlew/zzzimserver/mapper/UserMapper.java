@@ -36,4 +36,13 @@ public interface UserMapper {
      */
     List<UserAuth> selectUserAuthListByUserIdList(List<Long> targetUserIdList);
 
+
+     /**
+      * 根据用户ID查询用户信息
+      *
+      * @param userId 用户ID
+      * @return 用户信息VO
+      */
+     UserAuth selectUserInfoById(Long userId);
+
 }

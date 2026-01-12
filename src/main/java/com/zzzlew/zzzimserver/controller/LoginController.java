@@ -62,9 +62,9 @@ public class LoginController {
      */
     @Operation(summary = "用户登录确认")
     @GetMapping("/pendingLogin")
-    public Result<Object> pendingLogin(@RequestParam("token") String token, @RequestParam("userId") Long userId) {
+    public Result<Object> pendingLogin(@RequestParam("token") String token, @RequestParam("userId") Long userId, HttpServletResponse response) {
         log.info("用户 {} 正在登录，用户id为 {}", token, userId);
-        userService.pendingLogin(token, userId);
+        userService.pendingLogin(token, userId, response);
         return Result.success();
     }
 }

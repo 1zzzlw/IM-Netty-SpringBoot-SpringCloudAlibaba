@@ -30,16 +30,42 @@ public class MessageController {
     private MessageService messageService;
 
     /**
-     * 初始化消息列表
+     * 热数据预加载消息列表，当前限额100条
      * 
      * @return 消息列表
      */
-    @Operation(summary = "初始化消息列表")
+    @Operation(summary = "热数据预加载消息列表")
     @GetMapping("/init/list/{conversationIds}")
     public Result<List<MessageVO>> initMessageList(@PathVariable String conversationIds) {
         log.info("对话id为：{}", conversationIds);
         List<MessageVO> messageVOList = messageService.initMessageList(conversationIds);
         return Result.success(messageVOList);
+    }
+
+    /**
+     * 根据前端最新消息增量更新消息列表
+     * 
+     * @return 消息列表
+     */
+    @Operation(summary = "根据前端最新消息增量更新消息列表")
+    @GetMapping("/update/list/{conversationIds}")
+    public Result<List<MessageVO>> updateMessageList(@PathVariable String conversationIds) {
+        log.info("对话id为：{}", conversationIds);
+        // List<MessageVO> messageVOList = messageService.updateMessageList(conversationIds);
+        return Result.success();
+    }
+
+    /**
+     * 根据前端最旧消息拉取旧消息到前端数据库中
+     *
+     * @return 消息列表
+     */
+    @Operation(summary = "根据前端最旧消息拉取旧消息到前端数据库中")
+    @GetMapping("/pull/list/{conversationIds}")
+    public Result<List<MessageVO>> pullMessageList(@PathVariable String conversationIds) {
+        log.info("对话id为：{}", conversationIds);
+        // List<MessageVO> messageVOList = messageService.pullMessageList(conversationIds);
+        return Result.success();
     }
 
     /**

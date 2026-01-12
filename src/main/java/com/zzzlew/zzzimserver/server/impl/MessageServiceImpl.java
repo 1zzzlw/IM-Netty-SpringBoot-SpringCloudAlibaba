@@ -1,6 +1,7 @@
 package com.zzzlew.zzzimserver.server.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.IdUtil;
 import com.zzzlew.zzzimserver.mapper.ConversationMapper;
 import com.zzzlew.zzzimserver.mapper.GroupConversationMapper;
 import com.zzzlew.zzzimserver.mapper.MessageMapper;
@@ -51,6 +52,12 @@ public class MessageServiceImpl implements MessageService {
     @Resource
     private MinIOFileStorgeUtil minIOFileStorgeUtil;
 
+    /**
+     * 热数据预加载消息列表，当前限额100条
+     *
+     * @param conversationIds 会话id列表
+     * @return 消息列表
+     */
     @Override
     public List<MessageVO> initMessageList(String conversationIds) {
         List<String> conversationIdList = List.of(conversationIds.split(","));
@@ -73,6 +80,7 @@ public class MessageServiceImpl implements MessageService {
     public MessageVO sendMessage(MessageDTO messageDTO) {
         // 获取当前登录用户id
         Long userId = UserHolder.getUser().getId();
+        messageDTO.setId(IdUtil.getSnowflakeNextId());
         messageDTO.setSenderId(userId);
         String conversationId = messageDTO.getConversationId();
 

@@ -29,11 +29,11 @@ public class FriendController {
     private FriendService friendService;
 
     /**
-     * 获取好友列表 TODO 优化的时候改成分页查询吧
+     * 全量更新并初始化好友列表
      * 
      * @return 好友列表
      */
-    @Operation(summary = "初始化好友列表")
+    @Operation(summary = "全量更新并初始化好友列表")
     @GetMapping("/init/list")
     public Result<List<FriendRelationVO>> initFriendList() {
         log.info("初始化好友列表");

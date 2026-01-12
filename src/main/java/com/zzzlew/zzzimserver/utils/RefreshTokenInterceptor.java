@@ -38,9 +38,9 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
         throws Exception {
         System.out.println("Interceptor triggered: " + request.getRequestURI());
-        // 获取请求头中的token
+        // 获取请求头中的短期token
         String token = request.getHeader(jwtproperties.getTokenName());
-        log.info("请求头中的token为：{}", token);
+        log.info("请求头中的短期token为：{}", token);
 
         // 检查token是否为空
         if (StrUtil.isBlank(token)) {

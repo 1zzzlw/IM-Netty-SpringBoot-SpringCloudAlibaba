@@ -224,15 +224,30 @@ public class UserServiceImpl implements UserService {
 
     /**
      * 处理待登录界面点击确认登录的操作
-     *
+     * 
      * @param token 登录时生成的token
+     * @param userId 用户id
+     * @param response HttpServletResponse对象
      */
     @Override
-    public void pendingLogin(String token, Long userId) {
-        // 判断token是否过期
+    public void pendingLogin(String token, Long userId, HttpServletResponse response) {
+        // 判断长期token是否过期
         if (jwtUtil.parseJWT(jwtproperties.getFreshSecretKey(), token) == null) {
             throw new TokenExpiredException(MessageConstant.TOKEN_EXPIRED);
         }
+        // 根据用户信息查询一次用户信息
+        UserAuth userAuth = userMapper.selectUserInfoById(userId);
+
+        // 构建用户信息对象
+        UserInfoVO userInfoVO = UserInfoVO.builder().id(userAuth.getUserId()).username(userAuth.getUsername())
+            .avatar(userAuth.getAvatar()).onLine(1).account(userAuth.getAccount()).build();
+
+        // 校验成功之后，重新生成一个短期token
+        TokenResult tokenResult = generateAndStoreWithUpdateToken(userInfoVO);
+
+        response.setHeader("Authorization", "Bearer " + tokenResult.getAccessToken());
+        response.setHeader("refreshtoken", tokenResult.getRefreshToken());
+
         storeFriendListId(userId);
     }
 

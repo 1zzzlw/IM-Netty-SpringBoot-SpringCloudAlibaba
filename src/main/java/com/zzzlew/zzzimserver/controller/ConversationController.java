@@ -35,11 +35,11 @@ public class ConversationController {
     private ApplyService applyService;
 
     /**
-     * 初始化界面时获取mysql内大量会话列表加载到前端本地数据库中
+     * 全量更新并初始化会话列表
      *
      * @return 会话列表
      */
-    @Operation(summary = "初始化会话列表")
+    @Operation(summary = "全量更新并初始化会话列表")
     @GetMapping("/init/list")
     public Result<List<ConversationVO>> initConversationList() {
         log.info("初始化会话列表");

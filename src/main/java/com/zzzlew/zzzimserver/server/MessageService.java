@@ -16,7 +16,7 @@ import java.util.List;
 public interface MessageService {
 
     /**
-     * 初始化会话内消息列表
+     * 热数据预加载消息列表，当前限额100条
      *
      * @param conversationIds 会话id列表
      * @return 消息列表

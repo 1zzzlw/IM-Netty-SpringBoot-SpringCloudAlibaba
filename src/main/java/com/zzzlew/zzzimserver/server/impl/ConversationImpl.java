@@ -39,7 +39,7 @@ public class ConversationImpl implements ConversationService {
     private GroupConversationMapper groupConversationMapper;
 
     /**
-     * 获取会话列表
+     * 全量更新并初始化会话列表
      *
      * @return 会话列表
      */
