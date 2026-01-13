@@ -15,12 +15,13 @@ import java.util.List;
  */
 public interface ConversationMapper {
     /**
-     * 根据用户id和会话id列表查询会话列表
+     * 根据用户id和用户离线时间列表查询会话列表
      *
      * @param userId 用户id
+     * @param quitTime 用户离线时间
      * @return 会话列表
      */
-    List<Conversation> selectListByUserId(Long userId);
+    List<Conversation> selectList(Long userId, String quitTime);
 
     /**
      * 更新会话状态

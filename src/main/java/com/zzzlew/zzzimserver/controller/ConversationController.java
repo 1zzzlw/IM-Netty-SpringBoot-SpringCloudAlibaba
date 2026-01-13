@@ -36,14 +36,15 @@ public class ConversationController {
 
     /**
      * 全量更新并初始化会话列表
-     *
+     * 
+     * @param isInit 是否初始化
      * @return 会话列表
      */
     @Operation(summary = "全量更新并初始化会话列表")
     @GetMapping("/init/list")
-    public Result<List<ConversationVO>> initConversationList() {
-        log.info("初始化会话列表");
-        List<ConversationVO> conversationVOList = conversationService.initConversationList();
+    public Result<List<ConversationVO>> initConversationList(@RequestParam Boolean isInit) {
+        log.info("初始化会话列表：{}", isInit);
+        List<ConversationVO> conversationVOList = conversationService.initConversationList(isInit);
         log.info("会话列表：{}", conversationVOList);
         return Result.success(conversationVOList);
     }

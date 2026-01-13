@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.zzzlew.zzzimserver.constant.RedisConstant.FILE_CHUNK_INDEX_KEY;
-import static com.zzzlew.zzzimserver.constant.RedisConstant.FILE_CHUNK_INDEX_KEY_TTL;
+import static com.zzzlew.zzzimserver.constant.RedisConstant.*;
 
 /**
  * @Auther: zzzlew
@@ -59,10 +59,23 @@ public class MessageServiceImpl implements MessageService {
      * @return 消息列表
      */
     @Override
-    public List<MessageVO> initMessageList(String conversationIds) {
+    public List<MessageVO> initMessageList(String conversationIds, Boolean isInit) {
+        // 获取当前登录用户的id
+        Long userId = UserHolder.getUser().getId();
+        // 从redis中获取当前用户的离线时间
+        Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(USER_OFFLINE_INFO_KEY);
+        String quitTime;
+        // 如果redis中不存在该值的信息，或者已经标记了是初始化，那么就直接返回空列表
+        if (entries.get(userId.toString()) == null || isInit) {
+            // redis中不存在该值的信息，或者已经标记了是初始化
+            quitTime = null;
+        } else {
+            quitTime = entries.get(userId.toString()).toString();
+        }
+
         List<String> conversationIdList = List.of(conversationIds.split(","));
         // 查询会话内的消息列表
-        List<message> messageList = messageMapper.selectMessageList(conversationIdList);
+        List<message> messageList = messageMapper.selectMessageList(conversationIdList, quitTime);
 
         List<MessageVO> messageVOList = new ArrayList<>();
 

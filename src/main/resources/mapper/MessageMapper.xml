@@ -6,12 +6,19 @@
     <select id="selectMessageList" resultType="com.zzzlew.zzzimserver.pojo.entity.message"
             parameterType="java.util.List">
         select * from message
-        where conversation_id in
-        <foreach collection="conversationIdList" item="conversationId" open="(" close=")"
-                 separator=",">
-            #{conversationId}
-        </foreach>
-        limit 100
+        <where>conversation_id in
+            <foreach collection="conversationIdList" item="conversationId" open="(" close=")"
+                     separator=",">
+                #{conversationId}
+            </foreach>
+            <if test="quitTime != null and quitTime != ''">
+                and send_time >= #{quitTime}
+            </if>
+        </where>
+        -- 只有当初始化登录时限制查询数量，增量更新不需要
+        <if test="quitTime == null and quitTime == ''">
+            limit 100
+        </if>
     </select>
 
     <insert id="saveMessage"

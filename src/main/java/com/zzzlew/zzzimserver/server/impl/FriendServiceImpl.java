@@ -9,9 +9,13 @@ import com.zzzlew.zzzimserver.server.FriendService;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+
+import static com.zzzlew.zzzimserver.constant.RedisConstant.USER_OFFLINE_INFO_KEY;
 
 /**
  * @Auther: zzzlew
@@ -27,16 +31,33 @@ public class FriendServiceImpl implements FriendService {
     private FriendMapper friendMapper;
     @Resource
     private UserInfoMapper userInfoMapper;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
+    /**
+     * 全量更新并初始化好友列表
+     * 
+     * @param isInit 是否初始化
+     * @return 好友列表
+     */
     @Override
-    public List<FriendRelationVO> initFriendList() {
+    public List<FriendRelationVO> initFriendList(Boolean isInit) {
         // 获得当前登录用户的信息
         UserBaseDTO userBaseDTO = UserHolder.getUser();
         // 获取当前用户id
         Long userId = userBaseDTO.getId();
         log.info("当前用户id: {}", userId);
-        // 根据用户id查询该用户的好友列表
-        List<FriendRelationVO> friendRelationVOList = friendMapper.selectFriendList(userId);
+        // 查看redis中是否有登录记录
+        Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(USER_OFFLINE_INFO_KEY);
+        String quitTime;
+        if (entries.get(userId.toString()) == null || isInit) {
+            quitTime = null;
+        } else {
+            quitTime = entries.get(userId.toString()).toString();
+        }
+        log.info("该用户的上次离线时间是：{}", quitTime);
+        // 根据用户id和用户离线时间查询该用户的好友列表
+        List<FriendRelationVO> friendRelationVOList = friendMapper.selectFriendList(userId, quitTime);
         // 打印好友列表
         log.info("好友列表: {}", friendRelationVOList);
         // 返回好友列表

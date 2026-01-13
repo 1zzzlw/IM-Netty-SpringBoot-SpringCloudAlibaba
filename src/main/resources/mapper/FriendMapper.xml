@@ -4,17 +4,22 @@
 <mapper namespace="com.zzzlew.zzzimserver.mapper.FriendMapper">
      <select id="selectFriendList"
             resultType="com.zzzlew.zzzimserver.pojo.vo.friend.FriendRelationVO">
-         select user_id           as userId,
-                u.id              as friendId,
-                u.username,
-                u.avatar,
-                f.remark,
-                f.relation_status as
-                                     relationStatus
+         select user_id as userId,
+         u.id as friendId,
+         u.username,
+         u.avatar,
+         f.remark,
+         f.relation_status as
+         relationStatus
          from friend_relation f
-                  join user_info u on
-             u.id = f.friend_id
-         where f.user_id = #{userId}
+         join user_info u on
+         u.id = f.friend_id
+         <where>
+             f.user_id = #{userId}
+             <if test="quitTime != null and quitTime != ''">
+                 and f.update_time >= #{quitTime}
+             </if>
+         </where>
      </select>
 
     <insert id="addFriendToRelation">

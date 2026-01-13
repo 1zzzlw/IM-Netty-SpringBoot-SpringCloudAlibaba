@@ -14,12 +14,15 @@ import com.zzzlew.zzzimserver.server.ConversationService;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.zzzlew.zzzimserver.constant.RedisConstant.USER_OFFLINE_INFO_KEY;
 
 /**
  * @Auther: zzzlew
@@ -37,19 +40,31 @@ public class ConversationImpl implements ConversationService {
     private UserMapper userMapper;
     @Resource
     private GroupConversationMapper groupConversationMapper;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 全量更新并初始化会话列表
      *
+     * @param isInit 是否初始化
      * @return 会话列表
      */
     @Transactional
     @Override
-    public List<ConversationVO> initConversationList() {
+    public List<ConversationVO> initConversationList(Boolean isInit) {
         // 获得当前登录用户id
         Long userId = UserHolder.getUser().getId();
-        // 根据用户id和会话id查询登录用户的会话列表
-        List<Conversation> conversationList = conversationMapper.selectListByUserId(userId);
+        // 查看redis中是否有登录记录
+        Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(USER_OFFLINE_INFO_KEY);
+        String quitTime;
+        if (entries.get(userId.toString()) == null || isInit) {
+            // redis中不存在该值的信息，或者已经标记了是初始化
+            quitTime = null;
+        } else {
+            quitTime = entries.get(userId.toString()).toString();
+        }
+        // 根据用户id和用户的离线时间查询登录用户的会话列表
+        List<Conversation> conversationList = conversationMapper.selectList(userId, quitTime);
 
         // 如果会话列表为空，直接返回空列表
         if (conversationList.isEmpty()) {

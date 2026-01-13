@@ -19,9 +19,10 @@ public interface MessageService {
      * 热数据预加载消息列表，当前限额100条
      *
      * @param conversationIds 会话id列表
+     * @param isInit 是否初始化
      * @return 消息列表
      */
-    List<MessageVO> initMessageList(String conversationIds);
+    List<MessageVO> initMessageList(String conversationIds, Boolean isInit);
 
     /**
      * 发送消息
@@ -64,4 +65,5 @@ public interface MessageService {
      * @param chunkCount 分片数量
      */
     void mergeFile(String fileHash, String filename, Integer fileType, Integer chunkCount);
+
 }

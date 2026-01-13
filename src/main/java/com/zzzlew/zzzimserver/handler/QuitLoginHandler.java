@@ -1,11 +1,18 @@
 package com.zzzlew.zzzimserver.handler;
 
 import cn.hutool.extra.spring.SpringUtil;
-import com.zzzlew.zzzimserver.server.WebSocketService;
+import com.zzzlew.zzzimserver.pojo.dto.user.UserBaseDTO;
+import com.zzzlew.zzzimserver.utils.ChannelManageUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import static com.zzzlew.zzzimserver.constant.RedisConstant.USER_OFFLINE_INFO_KEY;
 
 /**
  * @Auther: zzzlew
@@ -17,12 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 @ChannelHandler.Sharable
 public class QuitLoginHandler extends ChannelInboundHandlerAdapter {
 
-    private WebSocketService webSocketService;
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        if (this.webSocketService == null) {
-            this.webSocketService = SpringUtil.getBean(WebSocketService.class);
+    public void handlerAdded(ChannelHandlerContext ctx) {
+        if (this.stringRedisTemplate == null) {
+            this.stringRedisTemplate = SpringUtil.getBean(StringRedisTemplate.class);
         }
     }
 
@@ -48,6 +55,7 @@ public class QuitLoginHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        log.info("Handler从Channel的Pipeline中移除，通道关闭！");
         offLine(ctx);
     }
 
@@ -57,7 +65,6 @@ public class QuitLoginHandler extends ChannelInboundHandlerAdapter {
      * @param ctx 通道处理器上下文
      */
     private void offLine(ChannelHandlerContext ctx) {
-        webSocketService.offline(ctx.channel());
         ctx.channel().close();
     }
 
@@ -69,7 +76,19 @@ public class QuitLoginHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        // 无论客户端何种方式断开连接，都会执行这里的离线逻辑
         log.info("与客户端 {} 断开连接，通道关闭！", ctx.channel().remoteAddress());
+        // 获得用户的基础信息
+        UserBaseDTO userBaseDTO = ChannelManageUtil.getUser(ctx.channel());
+        log.info("用户 {} 离线！", userBaseDTO.getUsername());
+        // 将离线信息存储在redis中
+        LocalDateTime offlineTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String offlineTimeStr = offlineTime.format(formatter);
+        stringRedisTemplate.opsForHash().put(USER_OFFLINE_INFO_KEY, userBaseDTO.getId().toString(),
+                offlineTimeStr);
+
+        ChannelManageUtil.removeChannel(ctx.channel());
         offLine(ctx);
     }
 

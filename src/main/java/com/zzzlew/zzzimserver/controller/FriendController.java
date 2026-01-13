@@ -10,6 +10,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
@@ -31,13 +32,14 @@ public class FriendController {
     /**
      * 全量更新并初始化好友列表
      * 
+     * @param isInit 是否初始化
      * @return 好友列表
      */
     @Operation(summary = "全量更新并初始化好友列表")
     @GetMapping("/init/list")
-    public Result<List<FriendRelationVO>> initFriendList() {
-        log.info("初始化好友列表");
-        List<FriendRelationVO> friendRelationVOList = friendService.initFriendList();
+    public Result<List<FriendRelationVO>> initFriendList(@RequestParam Boolean isInit) {
+        log.info("初始化好友列表: {}", isInit);
+        List<FriendRelationVO> friendRelationVOList = friendService.initFriendList(isInit);
         return Result.success(friendRelationVOList);
     }
 

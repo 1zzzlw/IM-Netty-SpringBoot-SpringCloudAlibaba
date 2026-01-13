@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
     private void storeFriendListId(Long userId) {
         String friendListKey = USER_FRIEND_LIST_KEY + userId;
         // 登录成功，查询该用户的好友列表，并存入redis中
-        List<FriendRelationVO> friendRelationVOList = friendMapper.selectFriendList(userId);
+        List<FriendRelationVO> friendRelationVOList = friendMapper.selectFriendList(userId, null);
         if (CollectionUtils.isEmpty(friendRelationVOList)) {
             return; // 跳过后续操作，避免空集合传入Redis
         }

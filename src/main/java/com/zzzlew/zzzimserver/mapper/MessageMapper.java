@@ -18,9 +18,10 @@ public interface MessageMapper {
      * 初始化会话内的消息列表
      * 
      * @param conversationIdList 会话id列表
+     * @param quitTime 退出时间
      * @return 消息VO列表
      */
-    List<message> selectMessageList(List<String> conversationIdList);
+    List<message> selectMessageList(List<String> conversationIdList, String quitTime);
 
     /**
      * 保存消息

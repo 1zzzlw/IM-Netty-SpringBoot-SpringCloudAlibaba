@@ -15,9 +15,10 @@ public interface FriendMapper {
      * 查询用户好友列表
      * 
      * @param userId 用户ID
+     * @param quitTime 用户离线时间
      * @return 好友列表
      */
-    List<FriendRelationVO> selectFriendList(Long userId);
+    List<FriendRelationVO> selectFriendList(Long userId, String quitTime);
 
     /**
      * 添加好友关系

@@ -32,4 +32,6 @@ public class RedisConstant {
 
     public static final String FILE_CHUNK_INDEX_KEY = "file:chunk:index:";
     public static final Long FILE_CHUNK_INDEX_KEY_TTL = 2L;
+
+    public static final String USER_OFFLINE_INFO_KEY = "user:offline:quitTime";
 }

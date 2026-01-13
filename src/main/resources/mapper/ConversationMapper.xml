@@ -3,12 +3,19 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.zzzlew.zzzimserver.mapper.ConversationMapper">
 
-    <select id="selectListByUserId"
+    <select id="selectList"
             resultType="com.zzzlew.zzzimserver.pojo.entity.Conversation">
         select *
         from conversation c
-        where c.user_id = #{userId}
-          and c.status = 1
+        <where>
+            -- 必要查条件
+            c.user_id = #{userId}
+            and c.status = 1
+            <if test="quitTime != null and quitTime != ''">
+                -- 如果用户退出时间非空
+                and c.update_time >= #{quitTime}
+            </if>
+        </where>
     </select>
 
     <update id="updateConversationStatus">

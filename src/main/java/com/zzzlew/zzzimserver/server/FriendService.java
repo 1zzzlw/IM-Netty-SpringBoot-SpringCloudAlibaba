@@ -16,9 +16,10 @@ public interface FriendService {
     /**
      * 全量更新并初始化好友列表
      * 
+     * @param isInit 是否初始化
      * @return 好友列表
      */
-    List<FriendRelationVO> initFriendList();
+    List<FriendRelationVO> initFriendList(Boolean isInit);
 
     /**
      * 搜索用户

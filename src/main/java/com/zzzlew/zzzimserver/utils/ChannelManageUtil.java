@@ -28,4 +28,11 @@ public class ChannelManageUtil {
         return Online_user.get(userId);
     }
 
+    public static void removeChannel(Channel channel) {
+        UserBaseDTO userBaseDTO = Online_channel.remove(channel);
+        if (userBaseDTO != null) {
+            Online_user.remove(userBaseDTO.getId());
+        }
+    }
+
 }
