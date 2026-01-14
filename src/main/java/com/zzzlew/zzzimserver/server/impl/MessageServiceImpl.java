@@ -72,10 +72,10 @@ public class MessageServiceImpl implements MessageService {
         } else {
             quitTime = entries.get(userId.toString()).toString();
         }
-
+        log.info("需要初始化加载的会话id为：{}，离线时间为：{}", conversationIds, quitTime);
         List<String> conversationIdList = List.of(conversationIds.split(","));
         // 查询会话内的消息列表
-        List<message> messageList = messageMapper.selectMessageList(conversationIdList, quitTime);
+        List<message> messageList = messageMapper.initMessageList(conversationIdList, quitTime);
 
         List<MessageVO> messageVOList = new ArrayList<>();
 
@@ -88,6 +88,20 @@ public class MessageServiceImpl implements MessageService {
         return messageVOList;
     }
 
+    @Override
+    public List<MessageVO> pullMessageList(String conversationId, Long maxMessageId) {
+        // 查询会话内的消息列表
+        List<message> messageList = messageMapper.pullMessageList(conversationId, maxMessageId);
+
+        // 转换为消息VO列表
+        List<MessageVO> messageVOList = messageList.stream()
+            .map(message -> BeanUtil.copyProperties(message, MessageVO.class)).collect(Collectors.toList());
+
+        log.info("从数据库中查询到的消息列表为：{}", messageVOList);
+
+        return messageVOList;
+    }
+
     @Transactional
     @Override
     public MessageVO sendMessage(MessageDTO messageDTO) {
@@ -95,6 +109,8 @@ public class MessageServiceImpl implements MessageService {
         Long userId = UserHolder.getUser().getId();
         messageDTO.setId(IdUtil.getSnowflakeNextId());
         messageDTO.setSenderId(userId);
+        // 重置发送时间，让数据库可以自动填充
+        messageDTO.setSendTime(null);
         String conversationId = messageDTO.getConversationId();
 
         MessageVO messageVO = BeanUtil.copyProperties(messageDTO, MessageVO.class);
@@ -150,20 +166,8 @@ public class MessageServiceImpl implements MessageService {
 
             conversationMapper.updateConversationStatus(conversationId, messageDTO.getContent(), sendTime, receiverId);
         }
+        log.info("发送的消息为：{}", messageVO);
         return messageVO;
-    }
-
-    @Override
-    public List<MessageVO> getMessageList(String conversationId) {
-        // 获取当前登录用户id
-        // Long userId = UserHolder.getUser().getId();
-        // 构建 conversationId
-        // String conversationId = userId > receiverId ? String.format("%d_%d", userId, receiverId)
-        // : String.format("%d_%d", receiverId, userId);
-        // 查询数据库中的消息
-        List<MessageVO> messageVOList = messageMapper.getMessageList(conversationId);
-        // 返回消息列表
-        return messageVOList;
     }
 
     @Override

@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.zzzlew.zzzimserver.mapper.MessageMapper">
 
-    <select id="selectMessageList" resultType="com.zzzlew.zzzimserver.pojo.entity.message"
+    <select id="initMessageList" resultType="com.zzzlew.zzzimserver.pojo.entity.message"
             parameterType="java.util.List">
         select * from message
         <where>conversation_id in
@@ -15,10 +15,21 @@
                 and send_time >= #{quitTime}
             </if>
         </where>
+        order by id desc
         -- 只有当初始化登录时限制查询数量，增量更新不需要
-        <if test="quitTime == null and quitTime == ''">
+        <if test="quitTime == null or quitTime == ''">
             limit 100
         </if>
+    </select>
+
+    <select id="pullMessageList" resultType="com.zzzlew.zzzimserver.pojo.entity.message">
+        select *
+        from message
+        where conversation_id = #{conversationId}
+          and id
+            &lt;
+              #{maxMessageId}
+        order by id desc limit 20
     </select>
 
     <insert id="saveMessage"

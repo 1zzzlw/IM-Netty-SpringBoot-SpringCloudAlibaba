@@ -25,20 +25,20 @@ public interface MessageService {
     List<MessageVO> initMessageList(String conversationIds, Boolean isInit);
 
     /**
+     * 根据前端最旧消息拉取旧消息到前端数据库中
+     *
+     * @param conversationId 会话id
+     * @return 消息列表
+     */
+    List<MessageVO> pullMessageList(String conversationId, Long maxMessageId);
+
+    /**
      * 发送消息
      *
      * @param messageDTO 消息dto
      * @return 消息vo
      */
     MessageVO sendMessage(MessageDTO messageDTO);
-
-    /**
-     * 获取会话内消息列表
-     *
-     * @param conversationId 会话id
-     * @return 消息列表
-     */
-    List<MessageVO> getMessageList(String conversationId);
 
     /**
      * 上传文件分片

@@ -50,11 +50,12 @@ public class MessageController {
      * @return 消息列表
      */
     @Operation(summary = "根据前端最旧消息拉取旧消息到前端数据库中")
-    @GetMapping("/pull/list/{conversationIds}")
-    public Result<List<MessageVO>> pullMessageList(@PathVariable String conversationIds) {
-        log.info("需要拉取旧消息的会话id列表为：{}", conversationIds);
-        // List<MessageVO> messageVOList = messageService.pullMessageList(conversationIds);
-        return Result.success();
+    @GetMapping("/pull/list")
+    public Result<List<MessageVO>> pullMessageList(@RequestParam String conversationId,
+        @RequestParam Long maxMessageId) {
+        log.info("需要拉取旧消息的会话id为：{}，最旧消息id为：{}", conversationId, maxMessageId);
+        List<MessageVO> messageVOList = messageService.pullMessageList(conversationId, maxMessageId);
+        return Result.success(messageVOList);
     }
 
     /**
@@ -68,20 +69,6 @@ public class MessageController {
         log.info("发送消息：{}", messageDTO);
         MessageVO messageVO = messageService.sendMessage(messageDTO);
         return Result.success(messageVO);
-    }
-
-    /**
-     * 获取消息列表
-     *
-     * @return 消息列表
-     */
-    @Operation(summary = "获取消息列表")
-    @GetMapping("/list")
-    public Result<List<MessageVO>> getMessageList(@RequestParam String conversationId) {
-        log.info("对话id为：{}", conversationId);
-        List<MessageVO> messageVOList = messageService.getMessageList(conversationId);
-        log.info("消息列表：{}", messageVOList);
-        return Result.success(messageVOList);
     }
 
     /**

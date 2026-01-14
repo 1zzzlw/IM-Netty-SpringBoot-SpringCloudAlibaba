@@ -21,7 +21,17 @@ public interface MessageMapper {
      * @param quitTime 退出时间
      * @return 消息VO列表
      */
-    List<message> selectMessageList(List<String> conversationIdList, String quitTime);
+    List<message> initMessageList(List<String> conversationIdList, String quitTime);
+
+
+    /**
+     * 拉取会话内的消息列表
+     *
+     * @param conversationId 会话id
+     * @param maxMessageId 最大消息id
+     * @return 消息VO列表
+     */
+    List<message> pullMessageList(String conversationId, Long maxMessageId);
 
     /**
      * 保存消息
