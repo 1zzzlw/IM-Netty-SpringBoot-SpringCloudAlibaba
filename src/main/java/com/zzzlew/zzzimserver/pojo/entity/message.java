@@ -70,4 +70,35 @@ public class message implements Serializable {
      * 引用消息id
      */
     private Long quoteMsgId;
+
+    /**
+     * 文件名
+     */
+    private String fileName;
+
+    /**
+     * 文件大小
+     */
+    private Long fileSize;
+
+    /**
+     * 本地url
+     */
+    private String localPath;
+
+    /**
+     * 远程url
+     */
+    private String remoteUrl;
+
+    /**
+     * 下载状态 0：未下载 1：已下载
+     */
+    private Integer downloadStatus;
+
+    /**
+     * 接收时间
+     */
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime receiveTime;
 }

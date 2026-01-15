@@ -41,6 +41,7 @@ public class MessageController {
     public Result<List<MessageVO>> initMessageList(@PathVariable String conversationIds, @RequestParam Boolean isInit) {
         log.info("需要初始化的会话id列表为：{}", conversationIds);
         List<MessageVO> messageVOList = messageService.initMessageList(conversationIds, isInit);
+        log.info("初始化完成，返回消息列表大小为：{}", messageVOList);
         return Result.success(messageVOList);
     }
 
