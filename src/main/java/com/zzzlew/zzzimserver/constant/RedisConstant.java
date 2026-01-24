@@ -30,8 +30,13 @@ public class RedisConstant {
     // 270秒过期时间，因为用户在270秒内没有操作，就可以判断为用户不在线，对应心跳时间90秒
     public static final Long USER_ONLINE_STATUS_KEY_TTL = 270L;
 
+    // 上传文件的凭证目录
+    public static final String FILE_UPLOAD_VERIFY_KEY = "file:upload:verify:";
+    public static final Long FILE_UPLOAD_VERIFY_KEY_TTL = 5L;
+
+    // 分块文件目录的键
     public static final String FILE_CHUNK_INDEX_KEY = "file:chunk:index:";
-    public static final Long FILE_CHUNK_INDEX_KEY_TTL = 2L;
+    public static final Long FILE_CHUNK_INDEX_KEY_TTL = 5L;
 
     public static final String USER_OFFLINE_INFO_KEY = "user:offline:quitTime";
 }

@@ -19,6 +19,8 @@ public class FileChunkInfoDTO implements Serializable {
     private String chunkHash;
 
     // 文件的md5值
-    private String fileHash;
+    private String fileId;
 
+    // 文件凭证
+    private String verify;
 }

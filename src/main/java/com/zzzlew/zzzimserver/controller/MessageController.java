@@ -12,6 +12,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 /**
@@ -73,6 +74,20 @@ public class MessageController {
     }
 
     /**
+     * 生成上传凭证
+     *
+     * @param fileId 文件id
+     * @return 凭证id
+     */
+    @Operation(summary = "获取文件的上传凭证")
+    @GetMapping("/verifyUploadToken/{fileId}")
+    public Result<String> verifyFileUploadToken(@PathVariable("fileId") String fileId) {
+        log.info("验证文件上传token是否有效：{}", fileId);
+        String verify = messageService.verifyFileUploadToken(fileId);
+        return Result.success(verify);
+    }
+
+    /**
      * 上传文件消息分块
      *
      * @return 消息id
@@ -82,21 +97,24 @@ public class MessageController {
     public Result<FileMessageVO> uploadFile(@RequestParam("chunkBlob") MultipartFile chunkBlob,
         @ModelAttribute FileChunkInfoDTO fileChunkInfoDTO) {
         log.info("上传文件分块消息的索引：{}，分块哈希值：{}，文件md5值：{}", fileChunkInfoDTO.getChunkIndex(), fileChunkInfoDTO.getChunkHash(),
-            fileChunkInfoDTO.getFileHash());
+            fileChunkInfoDTO.getFileId());
         messageService.uploadFileChunk(chunkBlob, fileChunkInfoDTO);
         return Result.success();
     }
 
     /**
-     * 获取上传成功的文件分块索引列表
+     * 检查文件分片是否上传完成
      *
-     * @return 上传成功的文件分块索引列表
+     * @param verify 凭证id
+     * @param fileId 文件哈希值
+     * @return 已上传分片索引列表
      */
     @Operation(summary = "获取上传成功的文件分块索引列表")
     @GetMapping("/checkUploaded")
-    public Result<List<Integer>> checkUploaded(@RequestParam("fileHash") String fileHash) {
-        log.info("检查文件分块是否上传完成：{}", fileHash);
-        List<Integer> uploadedChunkIndices = messageService.checkUploaded(fileHash);
+    public Result<List<Integer>> checkUploaded(@RequestParam("verify") String verify,
+        @RequestParam("fileId") String fileId) {
+        log.info("检查文件分块是否上传完成：{},{}", verify, fileId);
+        List<Integer> uploadedChunkIndices = messageService.checkUploaded(verify, fileId);
         return Result.success(uploadedChunkIndices);
     }
 

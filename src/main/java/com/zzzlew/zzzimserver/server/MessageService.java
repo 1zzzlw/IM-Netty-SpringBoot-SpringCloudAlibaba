@@ -51,10 +51,11 @@ public interface MessageService {
     /**
      * 检查文件分片是否上传完成
      *
-     * @param fileHash 文件哈希值
+     * @param verify 凭证id
+     * @param fileId 文件哈希值
      * @return 已上传分片索引列表
      */
-    List<Integer> checkUploaded(String fileHash);
+    List<Integer> checkUploaded(String verify, String fileId);
 
     /**
      * 合并文件分片
@@ -66,4 +67,11 @@ public interface MessageService {
      */
     void mergeFile(String fileHash, String filename, Integer fileType, Integer chunkCount);
 
+    /**
+     * 生成上传凭证
+     *
+     * @param fileId 文件id
+     * @return 凭证id
+     */
+    String verifyFileUploadToken(String fileId);
 }

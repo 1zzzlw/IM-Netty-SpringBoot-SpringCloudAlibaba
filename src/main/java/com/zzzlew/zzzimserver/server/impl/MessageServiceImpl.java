@@ -2,6 +2,8 @@ package com.zzzlew.zzzimserver.server.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
+import com.zzzlew.zzzimserver.constant.MessageConstant;
+import com.zzzlew.zzzimserver.exception.TokenExpiredException;
 import com.zzzlew.zzzimserver.mapper.ConversationMapper;
 import com.zzzlew.zzzimserver.mapper.GroupConversationMapper;
 import com.zzzlew.zzzimserver.mapper.MessageMapper;
@@ -9,7 +11,9 @@ import com.zzzlew.zzzimserver.pojo.dto.message.FileChunkInfoDTO;
 import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
 import com.zzzlew.zzzimserver.pojo.entity.message;
 import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
+import com.zzzlew.zzzimserver.properties.Jwtproperties;
 import com.zzzlew.zzzimserver.server.MessageService;
+import com.zzzlew.zzzimserver.utils.JwtUtil;
 import com.zzzlew.zzzimserver.utils.MinIOFileStorgeUtil;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
@@ -51,6 +55,10 @@ public class MessageServiceImpl implements MessageService {
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private MinIOFileStorgeUtil minIOFileStorgeUtil;
+    @Resource
+    private JwtUtil jwtUtil;
+    @Resource
+    private Jwtproperties jwtproperties;
 
     /**
      * 热数据预加载消息列表，当前限额100条
@@ -170,10 +178,45 @@ public class MessageServiceImpl implements MessageService {
         return messageVO;
     }
 
+    /**
+     * 生成上传凭证
+     *
+     * @param fileId 文件id
+     * @return 凭证id
+     */
+    @Override
+    public String verifyFileUploadToken(String fileId) {
+        // 生成雪花id，用来当作凭证
+        String verify = String.valueOf(IdUtil.getSnowflakeNextId());
+        // 创建凭证的redis目录
+        String verifyKey = FILE_UPLOAD_VERIFY_KEY + fileId;
+        stringRedisTemplate.opsForValue().set(verifyKey, verify);
+        stringRedisTemplate.expire(verifyKey, FILE_UPLOAD_VERIFY_KEY_TTL, TimeUnit.MINUTES);
+        // 创建该文件id的redis目录结构
+        String fileIdKey = FILE_CHUNK_INDEX_KEY + fileId;
+        // 分块索引不可能存在负数，因此使用-1创建索引
+        stringRedisTemplate.opsForZSet().add(fileIdKey, "-1", -1);
+        // 设置过期时间
+        stringRedisTemplate.expire(fileIdKey, FILE_CHUNK_INDEX_KEY_TTL, TimeUnit.MINUTES);
+        return verify;
+    }
+
     @Override
     public void uploadFileChunk(MultipartFile chunkBlob, FileChunkInfoDTO fileChunkInfoDTO) {
         Integer chunkIndex = fileChunkInfoDTO.getChunkIndex();
         String chunkHash = fileChunkInfoDTO.getChunkHash();
+        // 文件的唯一标识
+        String fileHash = fileChunkInfoDTO.getFileId();
+
+        String verify = fileChunkInfoDTO.getVerify();
+
+        // 根据文件hash，查询该文件的上传凭证
+        String verifyKey = FILE_UPLOAD_VERIFY_KEY + fileHash;
+        String realVerify = stringRedisTemplate.opsForValue().get(verifyKey);
+        if (realVerify.isBlank() || !verify.equals(realVerify)) {
+            // 没有该凭证
+            throw new RuntimeException("凭证不对");
+        }
 
         byte[] bytes = null;
         try {
@@ -192,14 +235,11 @@ public class MessageServiceImpl implements MessageService {
             log.info("第{}个分片校验成功", chunkIndex);
         }
 
-        // 文件的唯一标识
-        String fileHash = fileChunkInfoDTO.getFileHash();
-
         // 构建minio文件分块路径
         String minioFileChunkPath = "file-chunk/" + fileHash + "/" + chunkIndex;
 
         // 将文件分块文件存入minio中
-        minIOFileStorgeUtil.uploadFileChunk(minioFileChunkPath, chunkBlob);
+        // minIOFileStorgeUtil.uploadFileChunk(minioFileChunkPath, chunkBlob);
 
         String key = FILE_CHUNK_INDEX_KEY + fileHash;
         // 分片文件写入成功之后，将分片索引信息写入redis
@@ -209,9 +249,16 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<Integer> checkUploaded(String fileHash) {
-        String key = FILE_CHUNK_INDEX_KEY + fileHash;
-        Set<String> chunkIndices = stringRedisTemplate.opsForZSet().range(key, 0, -1);
+    public List<Integer> checkUploaded(String verify, String fileId) {
+        // 根据文件hash，查询该文件的上传凭证
+        String verifyKey = FILE_UPLOAD_VERIFY_KEY + fileId;
+        String realVerify = stringRedisTemplate.opsForValue().get(verifyKey);
+        if (realVerify.isBlank() || !verify.equals(realVerify)) {
+            // 没有该凭证
+            throw new RuntimeException("凭证不对");
+        }
+        String key = FILE_CHUNK_INDEX_KEY + fileId;
+        Set<String> chunkIndices = stringRedisTemplate.opsForZSet().rangeByScore(key, 0, Double.POSITIVE_INFINITY);
         if (chunkIndices == null || chunkIndices.isEmpty()) {
             // TODO 后期添加从minio查询已上传的分片索引
             return new ArrayList<>();
@@ -233,5 +280,4 @@ public class MessageServiceImpl implements MessageService {
         minIOFileStorgeUtil.clearChunkFlies(minioFileChunkPath, chunkCount);
         // 合并成功之后将文件信息存入数据库中
     }
-
 }

@@ -9,6 +9,7 @@ import com.zzzlew.zzzimserver.properties.SerializerProperties;
 import com.zzzlew.zzzimserver.protocol.MessageCodecSharable;
 import com.zzzlew.zzzimserver.protocol.Serializer;
 
+import cn.hutool.core.lang.UUID;
 import cn.hutool.extra.spring.SpringUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -80,6 +81,12 @@ public class TestSerializer {
         out.writeInt(bytes.length);
         out.writeBytes(bytes);
         return out;
+    }
+
+    @Test
+    public void test2() {
+        String fileId = 1 + "_" + System.currentTimeMillis() + "+" + UUID.fastUUID();
+        System.out.println(fileId);
     }
 
 }
