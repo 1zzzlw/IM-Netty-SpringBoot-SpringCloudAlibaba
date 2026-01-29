@@ -1,11 +1,13 @@
 package com.zzzlew.zzzimserver.server;
 
 import com.zzzlew.zzzimserver.pojo.dto.message.FileChunkInfoDTO;
+import com.zzzlew.zzzimserver.pojo.dto.message.FileMessageDTO;
 import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
 import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Auther: zzzlew
@@ -60,12 +62,9 @@ public interface MessageService {
     /**
      * 合并文件分片
      *
-     * @param fileHash 文件哈希值
-     * @param filename 文件名
-     * @param fileType 文件类型
-     * @param chunkCount 分片数量
+     * @param fileMessageDTO 文件消息dto
      */
-    void mergeFile(String fileHash, String filename, Integer fileType, Integer chunkCount);
+    void mergeFile(FileMessageDTO fileMessageDTO);
 
     /**
      * 生成上传凭证
@@ -73,5 +72,5 @@ public interface MessageService {
      * @param fileId 文件id
      * @return 凭证id
      */
-    String verifyFileUploadToken(String fileId);
+    Map<String, Object> verifyFileUploadToken(String fileId);
 }

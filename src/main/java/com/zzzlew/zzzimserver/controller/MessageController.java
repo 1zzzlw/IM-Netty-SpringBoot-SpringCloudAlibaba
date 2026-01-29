@@ -1,6 +1,7 @@
 package com.zzzlew.zzzimserver.controller;
 
 import com.zzzlew.zzzimserver.pojo.dto.message.FileChunkInfoDTO;
+import com.zzzlew.zzzimserver.pojo.dto.message.FileMessageDTO;
 import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
 import com.zzzlew.zzzimserver.pojo.vo.message.FileMessageVO;
 import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Auther: zzzlew
@@ -81,10 +83,10 @@ public class MessageController {
      */
     @Operation(summary = "获取文件的上传凭证")
     @GetMapping("/verifyUploadToken/{fileId}")
-    public Result<String> verifyFileUploadToken(@PathVariable("fileId") String fileId) {
+    public Result<Map<String, Object>> verifyFileUploadToken(@PathVariable("fileId") String fileId) {
         log.info("验证文件上传token是否有效：{}", fileId);
-        String verify = messageService.verifyFileUploadToken(fileId);
-        return Result.success(verify);
+        Map<String, Object> map = messageService.verifyFileUploadToken(fileId);
+        return Result.success(map);
     }
 
     /**
@@ -115,6 +117,7 @@ public class MessageController {
         @RequestParam("fileId") String fileId) {
         log.info("检查文件分块是否上传完成：{},{}", verify, fileId);
         List<Integer> uploadedChunkIndices = messageService.checkUploaded(verify, fileId);
+        log.info("上传过的文件分块集合：{}", uploadedChunkIndices);
         return Result.success(uploadedChunkIndices);
     }
 
@@ -125,11 +128,9 @@ public class MessageController {
      */
     @Operation(summary = "合并文件分块")
     @PostMapping("/merge")
-    public Result<FileMessageVO> mergeFile(@RequestParam("fileHash") String fileHash,
-        @RequestParam("fileName") String fileName, @RequestParam("fileType") Integer fileType,
-        @RequestParam("chunkCount") Integer chunkCount) {
-        log.info("文件Hash：{}，文件名：{}，文件类型：{}，分块数量：{}", fileHash, fileName, fileType, chunkCount);
-        messageService.mergeFile(fileHash, fileName, fileType, chunkCount);
+    public Result<FileMessageVO> mergeFile(@RequestBody FileMessageDTO fileMessageDTO) {
+        log.info("合并文件分块：{}", fileMessageDTO);
+        messageService.mergeFile(fileMessageDTO);
         return Result.success();
     }
 

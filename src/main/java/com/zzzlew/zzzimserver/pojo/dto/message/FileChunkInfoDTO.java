@@ -21,6 +21,9 @@ public class FileChunkInfoDTO implements Serializable {
     // 文件的md5值
     private String fileId;
 
+    // 文件类型
+    private Integer fileType;
+
     // 文件凭证
     private String verify;
 }

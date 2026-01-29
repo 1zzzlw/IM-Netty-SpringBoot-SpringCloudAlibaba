@@ -1,7 +1,6 @@
 package com.zzzlew.zzzimserver.pojo.dto.message;
 
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 
@@ -13,9 +12,29 @@ import java.io.Serializable;
  */
 @Data
 public class FileMessageDTO implements Serializable {
-    // 分块文件的二进制数据
-    private MultipartFile chunkBlob;
 
-    // 文件分块信息
-    private FileChunkInfoDTO fileChunkInfoDTO;
+    /**
+     * 文件哈希值
+     */
+    private String fileHash;
+
+    /**
+     * 文件名
+     */
+    private String fileName;
+
+    /**
+     * 文件类型
+     */
+    private Integer fileType;
+
+    /**
+     * minio的文件路径
+     */
+    private String minioFilePath;
+
+    /**
+     * 分块数量
+     */
+    private Integer chunkCount;
 }

@@ -1,28 +1,6 @@
 package com.zzzlew.zzzimserver.server.impl;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.IdUtil;
-import com.zzzlew.zzzimserver.constant.MessageConstant;
-import com.zzzlew.zzzimserver.exception.TokenExpiredException;
-import com.zzzlew.zzzimserver.mapper.ConversationMapper;
-import com.zzzlew.zzzimserver.mapper.GroupConversationMapper;
-import com.zzzlew.zzzimserver.mapper.MessageMapper;
-import com.zzzlew.zzzimserver.pojo.dto.message.FileChunkInfoDTO;
-import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
-import com.zzzlew.zzzimserver.pojo.entity.message;
-import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
-import com.zzzlew.zzzimserver.properties.Jwtproperties;
-import com.zzzlew.zzzimserver.server.MessageService;
-import com.zzzlew.zzzimserver.utils.JwtUtil;
-import com.zzzlew.zzzimserver.utils.MinIOFileStorgeUtil;
-import com.zzzlew.zzzimserver.utils.UserHolder;
-import jakarta.annotation.Resource;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.DigestUtils;
-import org.springframework.web.multipart.MultipartFile;
+import static com.zzzlew.zzzimserver.constant.RedisConstant.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -33,7 +11,31 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.zzzlew.zzzimserver.constant.RedisConstant.*;
+import com.zzzlew.zzzimserver.properties.MinIOConfigProperties;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.zzzlew.zzzimserver.mapper.ConversationMapper;
+import com.zzzlew.zzzimserver.mapper.GroupConversationMapper;
+import com.zzzlew.zzzimserver.mapper.MessageMapper;
+import com.zzzlew.zzzimserver.pojo.dto.message.FileChunkInfoDTO;
+import com.zzzlew.zzzimserver.pojo.dto.message.FileMessageDTO;
+import com.zzzlew.zzzimserver.pojo.dto.message.MessageDTO;
+import com.zzzlew.zzzimserver.pojo.entity.message;
+import com.zzzlew.zzzimserver.pojo.vo.message.MessageVO;
+import com.zzzlew.zzzimserver.properties.Jwtproperties;
+import com.zzzlew.zzzimserver.server.MessageService;
+import com.zzzlew.zzzimserver.utils.JwtUtil;
+import com.zzzlew.zzzimserver.utils.MinIOFileStorgeUtil;
+import com.zzzlew.zzzimserver.utils.UserHolder;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.IdUtil;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Auther: zzzlew
@@ -59,6 +61,8 @@ public class MessageServiceImpl implements MessageService {
     private JwtUtil jwtUtil;
     @Resource
     private Jwtproperties jwtproperties;
+    @Resource
+    private MinIOConfigProperties minIOConfigProperties;
 
     /**
      * 热数据预加载消息列表，当前限额100条
@@ -124,6 +128,16 @@ public class MessageServiceImpl implements MessageService {
         MessageVO messageVO = BeanUtil.copyProperties(messageDTO, MessageVO.class);
         LocalDateTime sendTime = LocalDateTime.now();
         messageVO.setSendTime(sendTime);
+        Integer msgType = messageDTO.getMsgType();
+
+        if (msgType != 1) {
+            // 文件消息
+            String bucketName = minIOFileStorgeUtil.getBucketName(msgType);
+            String remotePath = messageDTO.getRemotePath();
+            messageDTO.setBucket(bucketName);
+            String minioRemoteUrl = minIOConfigProperties.getEndpoint() + "/" + bucketName + "/" + remotePath;
+            messageDTO.setRemoteUrl(minioRemoteUrl);
+        }
 
         // 保存消息到数据库
         messageMapper.saveMessage(messageDTO);
@@ -174,7 +188,7 @@ public class MessageServiceImpl implements MessageService {
 
             conversationMapper.updateConversationStatus(conversationId, messageDTO.getContent(), sendTime, receiverId);
         }
-        log.info("发送的消息为：{}", messageVO);
+        log.info("回应的消息为：{}", messageVO);
         return messageVO;
     }
 
@@ -185,7 +199,7 @@ public class MessageServiceImpl implements MessageService {
      * @return 凭证id
      */
     @Override
-    public String verifyFileUploadToken(String fileId) {
+    public Map<String, Object> verifyFileUploadToken(String fileId) {
         // 生成雪花id，用来当作凭证
         String verify = String.valueOf(IdUtil.getSnowflakeNextId());
         // 创建凭证的redis目录
@@ -198,7 +212,9 @@ public class MessageServiceImpl implements MessageService {
         stringRedisTemplate.opsForZSet().add(fileIdKey, "-1", -1);
         // 设置过期时间
         stringRedisTemplate.expire(fileIdKey, FILE_CHUNK_INDEX_KEY_TTL, TimeUnit.MINUTES);
-        return verify;
+        // 创建存入minio的文件路径
+        String minioFilePath = minIOFileStorgeUtil.buildFilePath(fileId);
+        return Map.of("verify", verify, "minioFilePath", minioFilePath);
     }
 
     @Override
@@ -207,7 +223,7 @@ public class MessageServiceImpl implements MessageService {
         String chunkHash = fileChunkInfoDTO.getChunkHash();
         // 文件的唯一标识
         String fileHash = fileChunkInfoDTO.getFileId();
-
+        Integer fileType = fileChunkInfoDTO.getFileType();
         String verify = fileChunkInfoDTO.getVerify();
 
         // 根据文件hash，查询该文件的上传凭证
@@ -239,7 +255,7 @@ public class MessageServiceImpl implements MessageService {
         String minioFileChunkPath = "file-chunk/" + fileHash + "/" + chunkIndex;
 
         // 将文件分块文件存入minio中
-        // minIOFileStorgeUtil.uploadFileChunk(minioFileChunkPath, chunkBlob);
+        minIOFileStorgeUtil.uploadFileChunk(minioFileChunkPath, chunkBlob, fileType);
 
         String key = FILE_CHUNK_INDEX_KEY + fileHash;
         // 分片文件写入成功之后，将分片索引信息写入redis
@@ -269,15 +285,19 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void mergeFile(String fileHash, String filename, Integer fileType, Integer chunkCount) {
+    public void mergeFile(FileMessageDTO fileMessageDTO) {
+        String fileHash = fileMessageDTO.getFileHash();
+        String fileName = fileMessageDTO.getFileName();
+        Integer fileType = fileMessageDTO.getFileType();
+        Integer chunkCount = fileMessageDTO.getChunkCount();
         // 创建存入minio的文件路径
-        String minioFilePath = minIOFileStorgeUtil.buildFilePath(filename);
+        String minioFilePath = fileMessageDTO.getMinioFilePath();
         // 分块文件所在路径
         String minioFileChunkPath = "file-chunk/" + fileHash + "/";
         // 合并文件分块
-        minIOFileStorgeUtil.mergeFileChunks(minioFilePath, minioFileChunkPath, chunkCount);
+        minIOFileStorgeUtil.mergeFileChunks(minioFilePath, minioFileChunkPath, chunkCount, fileType);
         // 清除分块文件
-        minIOFileStorgeUtil.clearChunkFlies(minioFileChunkPath, chunkCount);
+        minIOFileStorgeUtil.clearChunkFlies(minioFileChunkPath, chunkCount, fileType);
         // 合并成功之后将文件信息存入数据库中
     }
 }

@@ -1,6 +1,7 @@
 package com.zzzlew.zzzimserver.handler.messageHandler;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.IdUtil;
 import com.zzzlew.zzzimserver.pojo.dto.message.PrivateChatRequestDTO;
 import com.zzzlew.zzzimserver.pojo.vo.message.PrivateChatResponseVO;
 import com.zzzlew.zzzimserver.utils.ChannelManageUtil;
@@ -28,6 +29,11 @@ public class PrivateChatHandler extends SimpleChannelInboundHandler<PrivateChatR
         log.info("收到私聊消息：{}", privateChatRequestDTO);
         // 获得当前登录用户id
         Long userId = ChannelManageUtil.getUser(ctx.channel()).getId();
+        // 后端重新生成雪花id
+        privateChatRequestDTO.setId(IdUtil.getSnowflakeNextId());
+        privateChatRequestDTO.setSenderId(userId);
+        // 重置发送时间，让数据库可以自动填充
+        privateChatRequestDTO.setSendTime(null);
         // 获得接收者id
         Long receiverId = privateChatRequestDTO.getReceiverId();
         // 搭建 conversationId
@@ -39,6 +45,7 @@ public class PrivateChatHandler extends SimpleChannelInboundHandler<PrivateChatR
         // privateChatRequestDTO.setConversationId(conversationId);
         privateChatRequestDTO.setSenderId(userId);
         privateChatRequestDTO.setMsgType(1);
+        log.info("私信消息:{}", privateChatRequestDTO);
         // 获取接收者的channel
         Channel channel = ChannelManageUtil.getChannel(receiverId);
         if (channel != null) {

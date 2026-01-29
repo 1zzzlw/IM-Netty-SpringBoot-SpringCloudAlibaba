@@ -45,7 +45,7 @@ public class MessageDTO implements Serializable {
     private String content;
 
     /**
-     * 发送状态 0 -发送中  1 -成功  2 -失败
+     * 发送状态 0 -发送中 1 -成功 2 -失败
      */
     private Integer sendStatus;
 
@@ -55,4 +55,43 @@ public class MessageDTO implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime sendTime;
 
+    /**
+     * 文件id
+     */
+    private String fileId;
+
+    /**
+     * 文件名
+     */
+    private String fileName;
+
+    /**
+     * 文件大小
+     */
+    private Long fileSize;
+
+    /**
+     * 存储桶名称
+     */
+    private String bucket;
+
+    /**
+     * 远程文件路径
+     */
+    private String remotePath;
+
+    /**
+     * 本地文件路径
+     */
+    private String localPath;
+
+    /**
+     * 远程文件路径
+     */
+    private String remoteUrl;
+
+    /**
+     * 预览base64
+     */
+    private String previewBase64;
 }

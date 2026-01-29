@@ -85,6 +85,16 @@ public class MessageVO implements Serializable {
     private Long fileSize;
 
     /**
+     * 存储桶名称
+     */
+    private String bucket;
+
+    /**
+     * 远程文件路径
+     */
+    private String remotePath;
+
+    /**
      * 本地url
      */
     private String localPath;
@@ -93,6 +103,11 @@ public class MessageVO implements Serializable {
      * 远程url
      */
     private String remoteUrl;
+
+    /**
+     * 预览base64
+     */
+    private String previewBase64;
 
     /**
      * 下载状态 0：未下载 1：已下载

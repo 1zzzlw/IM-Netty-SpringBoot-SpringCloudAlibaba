@@ -33,9 +33,24 @@ public class MinIOConfigProperties implements Serializable {
     private String secretKey;
 
     /**
-     * MinIO 存储桶名称
+     * 存储照片桶的名称
      */
-    private String bucketName;
+    private String imageBucket;
+
+    /**
+     * 存储视频桶的名称
+     */
+    private String videoBucket;
+
+    /**
+     * 存储音频桶的名称
+     */
+    private String AudioBucket;
+
+    /**
+     * 存储文件桶的名称
+     */
+    private String fileBucket;
 
     /**
      * MinIO 图片路径

@@ -49,12 +49,12 @@ public class MinIOFileStorgeUtil {
     }
 
     // 上传文件分块到minio
-    public void uploadFileChunk(String minioFileChunkPath, MultipartFile chunkBlob) {
+    public void uploadFileChunk(String minioFileChunkPath, MultipartFile chunkBlob, Integer fileType) {
         try {
             // 根据分块文件的流存入minio
             PutObjectArgs putObjectArgs = PutObjectArgs.builder()
                 // 存储桶名称
-                .bucket(minIOConfigProperties.getBucketName())
+                .bucket(getBucketName(fileType))
                 // 存入minio的路径对象
                 .object(minioFileChunkPath)
                 // 输入流
@@ -65,8 +65,8 @@ public class MinIOFileStorgeUtil {
             minioClient.putObject(putObjectArgs);
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("上传文件出错,bucket:{},objectName:{},错误信息:{}", minIOConfigProperties.getBucketName(),
-                minioFileChunkPath, e.getMessage());
+            log.error("上传文件出错,bucket:{},objectName:{},错误信息:{}", getBucketName(fileType), minioFileChunkPath,
+                e.getMessage());
         }
     }
 
@@ -76,23 +76,21 @@ public class MinIOFileStorgeUtil {
      * @param minioFilePath minio文件路径 格式：yyyy/MM/dd/filename
      * @param chunkCount 分块数量
      */
-    public void mergeFileChunks(String minioFilePath, String minioFileChunkPath, int chunkCount) {
+    public void mergeFileChunks(String minioFilePath, String minioFileChunkPath, int chunkCount, Integer fileType) {
         // 从minio中获得所有的分块文件
         List<ComposeSource> sources = new ArrayList<>();
         for (int i = 0; i < chunkCount; i++) {
-            sources.add(ComposeSource.builder().bucket(minIOConfigProperties.getBucketName())
-                .object(minioFileChunkPath + i).build());
+            sources.add(ComposeSource.builder().bucket(getBucketName(fileType)).object(minioFileChunkPath + i).build());
         }
 
-        ComposeObjectArgs composeObjectArgs = ComposeObjectArgs.builder().bucket(minIOConfigProperties.getBucketName())
-            .object(minioFilePath).sources(sources).build();
+        ComposeObjectArgs composeObjectArgs =
+            ComposeObjectArgs.builder().bucket(getBucketName(fileType)).object(minioFilePath).sources(sources).build();
 
         try {
             minioClient.composeObject(composeObjectArgs);
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("合并文件出错,bucket:{},objectName:{},错误信息:{}", minIOConfigProperties.getBucketName(), minioFilePath,
-                e.getMessage());
+            log.error("合并文件出错,bucket:{},objectName:{},错误信息:{}", getBucketName(fileType), minioFilePath, e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -103,12 +101,12 @@ public class MinIOFileStorgeUtil {
      * @param minioFileChunkPath minio文件分块路径 格式：yyyy/MM/dd/filename/
      * @param chunkCount 分块数量
      */
-    public void clearChunkFlies(String minioFileChunkPath, int chunkCount) {
+    public void clearChunkFlies(String minioFileChunkPath, int chunkCount, Integer fileType) {
         Iterable<DeleteObject> objects = Stream.iterate(0, i -> ++i).limit(chunkCount)
             .map(i -> new DeleteObject(minioFileChunkPath + i)).collect(Collectors.toList());
 
         RemoveObjectsArgs removeObjectsArgs =
-            RemoveObjectsArgs.builder().bucket(minIOConfigProperties.getBucketName()).objects(objects).build();
+            RemoveObjectsArgs.builder().bucket(getBucketName(fileType)).objects(objects).build();
 
         try {
             Iterable<Result<DeleteError>> results = minioClient.removeObjects(removeObjectsArgs);
@@ -121,9 +119,27 @@ public class MinIOFileStorgeUtil {
             });
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("清除文件分块出错,bucket:{},objectName:{},错误信息:{}", minIOConfigProperties.getBucketName(),
-                minioFileChunkPath, e.getMessage());
+            log.error("清除文件分块出错,bucket:{},objectName:{},错误信息:{}", getBucketName(fileType), minioFileChunkPath,
+                e.getMessage());
             throw new RuntimeException(e);
+        }
+    }
+
+    public String getBucketName(Integer fileType) {
+        switch (fileType) {
+            case 2 -> {
+                return minIOConfigProperties.getImageBucket();
+            }
+            case 3 -> {
+                return minIOConfigProperties.getVideoBucket();
+            }
+            case 4 -> {
+                return minIOConfigProperties.getAudioBucket();
+            }
+            case 5 -> {
+                return minIOConfigProperties.getFileBucket();
+            }
+            default -> throw new IllegalArgumentException("不支持的文件类型编码：" + fileType);
         }
     }
 

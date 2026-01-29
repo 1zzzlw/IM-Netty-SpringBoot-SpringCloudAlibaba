@@ -1,10 +1,11 @@
 package com.zzzlew.zzzimserver.config;
 
-import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.context.annotation.Bean;
 import com.zzzlew.zzzimserver.properties.MinIOConfigProperties;
 import io.minio.MinioClient;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
  * @Description: com.zzzlew.zzzimserver.config
  * @version: 1.0
  */
+@Slf4j
 @Component
 @Configurable
 public class MinIOConfig {
@@ -25,5 +27,4 @@ public class MinIOConfig {
         return MinioClient.builder().endpoint(minIOConfigProperties.getEndpoint())
             .credentials(minIOConfigProperties.getAccessKey(), minIOConfigProperties.getSecretKey()).build();
     }
-
 }
