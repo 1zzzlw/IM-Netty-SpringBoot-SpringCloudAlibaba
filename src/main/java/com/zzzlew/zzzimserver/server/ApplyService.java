@@ -6,6 +6,8 @@ import com.zzzlew.zzzimserver.pojo.dto.apply.GroupApplyDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.SendApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.ApplyVO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
+import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -44,7 +46,7 @@ public interface ApplyService {
      * @param friendIdList  好友ID列表
      * @param groupApplyDTO 群聊申请信息
      */
-    String createGroupConversation(List<Long> friendIdList, GroupApplyDTO groupApplyDTO);
+    ConversationVO createGroupConversation(List<Long> friendIdList, GroupApplyDTO groupApplyDTO, MultipartFile groupAvatar);
 
      /**
       * 获取群聊申请列表
@@ -58,6 +60,6 @@ public interface ApplyService {
       *
       * @param dealGroupDTO 群聊申请处理信息
       */
-    void dealGroupApply(DealGroupDTO dealGroupDTO);
+    void dealGroupApply(DealGroupDTO dealGroupDTO, MultipartFile groupAvatarBlob);
 
 }

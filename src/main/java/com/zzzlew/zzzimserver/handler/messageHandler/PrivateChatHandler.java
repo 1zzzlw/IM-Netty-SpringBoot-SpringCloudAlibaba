@@ -44,7 +44,6 @@ public class PrivateChatHandler extends SimpleChannelInboundHandler<PrivateChatR
         // 前端传递了，这里没必要重新组合了
         // privateChatRequestDTO.setConversationId(conversationId);
         privateChatRequestDTO.setSenderId(userId);
-        privateChatRequestDTO.setMsgType(1);
         log.info("私信消息:{}", privateChatRequestDTO);
         // 获取接收者的channel
         Channel channel = ChannelManageUtil.getChannel(receiverId);
@@ -54,10 +53,10 @@ public class PrivateChatHandler extends SimpleChannelInboundHandler<PrivateChatR
                 BeanUtil.copyProperties(privateChatRequestDTO, PrivateChatResponseVO.class);
             privateChatResponseVO.setSendTime(LocalDateTime.now());
             channel.writeAndFlush(privateChatResponseVO);
-            log.info("已向接收者{}的channel写入私聊消息", receiverId);
+            log.info("已向接收者{}的channel写入私聊消息:{}", receiverId, privateChatResponseVO);
         } else {
             // 接收者不在线
-            log.info("接收者不在线");
+            log.info("接收者{}不在线", receiverId);
         }
     }
 }

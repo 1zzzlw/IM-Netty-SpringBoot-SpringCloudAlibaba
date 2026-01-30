@@ -1,5 +1,9 @@
 server:
   port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json,text/plain,text/html
+    min-response-size: 1024
 #自定义编码器的序列化算法
 serializer:
   algorithm: Json
@@ -66,9 +70,13 @@ minio:
 #  endpoint: http://192.168.100.10:9001
 #  accessKey: minio
 #  secretKey: minio1234
-  endpoint: http://100.112.106.41:9000
-  accessKey: minioadmin
-  secretKey: minioadmin
+#  endpoint: http://100.112.106.41:9000
+#  accessKey: minioadmin
+#  secretKey: minioadmin
+  endpoint: http://47.111.22.183:9000
+  accessKey: admin
+  secretKey: 12345678
+  avatarBucket: zzz-im-avatar
   imageBucket: zzz-im-image
   videoBucket: zzz-im-video
   audioBucket: zzz-im-audio

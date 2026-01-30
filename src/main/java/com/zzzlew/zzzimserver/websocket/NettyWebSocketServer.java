@@ -76,13 +76,13 @@ public class NettyWebSocketServer {
                     pipeline.addLast(new HttpServerCodec());
                     // 将HTTP消息的多个部分聚合成完整的FullHttpRequest 确保收到完整的HTTP请求再处理 ，避免处理不完整的请求
                     // 入站请求，这个处理器只在入站的时候处理
-                    pipeline.addLast(new HttpObjectAggregator(64 * 1024));
+                    pipeline.addLast(new HttpObjectAggregator(128 * 1024));
                     // 出战请求，用于处理 HTTP 消息的分块写入，确保数据按块发送 这个处理器在消息入站的时候不使用，因为消息入站的只是请求
                     pipeline.addLast(new ChunkedWriteHandler());
                     // 自定义 Http 处理头，用于处理 Http 头信息
                     pipeline.addLast(new HttpHeadersHandler());
                     // 用于处理 WebSocket 协议的握手、升级和关闭，会自动处理 ping/pong 帧
-                    pipeline.addLast(new WebSocketServerProtocolHandler("/ws", null, true, 65536, true, true, 10000L));
+                    pipeline.addLast(new WebSocketServerProtocolHandler("/ws", null, true, 131072 , true, true, 10000L));
                     // 用于将 BinaryWebSocketFrame 转换为 ByteBuf ，因为后续的处理器都需要 ByteBuf 类型的消息
                     pipeline.addLast(new BinaryWebSocketFrameToByteBufHandler());
                     // 自定义协议处理，WebSocket 升级完成后使用

@@ -4,7 +4,6 @@ import com.zzzlew.zzzimserver.pojo.dto.apply.DealApplyDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.DealGroupDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.GroupApplyDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.SendApplyDTO;
-import com.zzzlew.zzzimserver.pojo.dto.user.GroupMemberDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.ApplyVO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
 
@@ -56,13 +55,6 @@ public interface ApplyMapper {
      * @return 群聊申请列表
      */
     List<GroupApplyVO> getGroupApplyList(Long userId);
-
-    /**
-     * 插入群成员
-     *
-     * @param groupMemberDTO 群成员信息
-     */
-    void insertGroupMember(GroupMemberDTO groupMemberDTO);
 
     /**
      * 处理群聊申请

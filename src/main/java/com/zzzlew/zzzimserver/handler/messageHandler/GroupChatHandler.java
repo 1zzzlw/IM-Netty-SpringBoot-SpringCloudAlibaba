@@ -30,7 +30,7 @@ public class GroupChatHandler extends SimpleChannelInboundHandler<GroupChatReque
         Long userId = ChannelManageUtil.getUser(ctx.channel()).getId();
         groupChatRequestDTO.setSenderId(userId);
         // 设置消息类型为1消息
-        groupChatRequestDTO.setMsgType(1);
+        // groupChatRequestDTO.setMsgType(1);
         // 获得接收者id列表
         List<Long> receiverIds = groupChatRequestDTO.getReceiverIds();
         LocalDateTime sendTime = LocalDateTime.now();

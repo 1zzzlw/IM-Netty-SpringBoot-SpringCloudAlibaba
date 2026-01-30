@@ -1,8 +1,12 @@
 package com.zzzlew.zzzimserver.server;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.zzzlew.zzzimserver.pojo.dto.user.UserLoginDTO;
 import com.zzzlew.zzzimserver.pojo.dto.user.UserRegisterDTO;
+import com.zzzlew.zzzimserver.pojo.entity.UserAuth;
 import com.zzzlew.zzzimserver.pojo.vo.user.UserInfoVO;
+
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -34,7 +38,8 @@ public interface UserService {
      * @param userRegisterDTO 用户注册DTO
      * @return 用户id
      */
-    Long register(UserRegisterDTO userRegisterDTO, HttpServletResponse response);
+    UserAuth register(UserRegisterDTO userRegisterDTO, MultipartFile avatarFile,
+                      HttpServletResponse response);
 
     /**
      * 创建验证码

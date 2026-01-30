@@ -93,6 +93,7 @@ public class MessageServiceImpl implements MessageService {
 
         // 转换为消息VO列表
         for (message message : messageList) {
+            log.info("初始化加载的消息为：{}", message);
             MessageVO messageVO = BeanUtil.copyProperties(message, MessageVO.class);
             messageVOList.add(messageVO);
         }

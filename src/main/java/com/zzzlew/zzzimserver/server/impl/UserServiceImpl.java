@@ -17,9 +17,11 @@ import com.zzzlew.zzzimserver.pojo.entity.UserInfo;
 import com.zzzlew.zzzimserver.pojo.vo.friend.FriendRelationVO;
 import com.zzzlew.zzzimserver.pojo.vo.user.UserInfoVO;
 import com.zzzlew.zzzimserver.properties.Jwtproperties;
+import com.zzzlew.zzzimserver.properties.MinIOConfigProperties;
 import com.zzzlew.zzzimserver.result.TokenResult;
 import com.zzzlew.zzzimserver.server.UserService;
 import com.zzzlew.zzzimserver.utils.JwtUtil;
+import com.zzzlew.zzzimserver.utils.MinIOFileStorgeUtil;
 import com.zzzlew.zzzimserver.utils.RegexUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +30,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -61,6 +64,10 @@ public class UserServiceImpl implements UserService {
     private Jwtproperties jwtproperties;
     @Resource
     private JwtUtil jwtUtil;
+    @Resource
+    private MinIOFileStorgeUtil minIOFileStorgeUtil;
+    @Resource
+    private MinIOConfigProperties minIOConfigProperties;
 
     @Override
     public UserInfoVO login(UserLoginDTO userLoginDTO, HttpServletResponse response) {
@@ -161,7 +168,7 @@ public class UserServiceImpl implements UserService {
      */
     @Transactional
     @Override
-    public Long register(UserRegisterDTO userRegisterDTO, HttpServletResponse response) {
+    public UserAuth register(UserRegisterDTO userRegisterDTO, MultipartFile avatarFile, HttpServletResponse response) {
         // 随机生成一个不会重复的账号
         long timestamp = System.currentTimeMillis();
         String randomStr = RandomUtil.randomString(4);
@@ -172,16 +179,30 @@ public class UserServiceImpl implements UserService {
 
         UserInfo userInfo = BeanUtil.copyProperties(userRegisterDTO, UserInfo.class);
 
-        userInfoMapper.insertUserInfo(userInfo);
+        Long userId = System.currentTimeMillis() * 1000L + RandomUtil.randomInt(1000);
 
-        // 获取insert语句生成的用户详细信息表中的主键
-        Long userId = userInfo.getId();
+        userInfo.setId(userId);
+
+        String avatarName = userId + "." + avatarFile.getContentType().split("/")[1];
+        // 生成远端的存储路径
+        String minioUserAvatarPath = userId + "/" + avatarName;
+        // 上传用户头像到minio服务端
+        minIOFileStorgeUtil.uploadAvatar(minioUserAvatarPath, avatarFile);
+        // 生成本地存储远程路径
+        String avatar = minIOConfigProperties.getEndpoint() + "/" + minIOConfigProperties.getAvatarBucket() + "/"
+            + minioUserAvatarPath;
+
+        userInfo.setAvatar(avatar);
+
+        userInfoMapper.insertUserInfo(userInfo);
 
         UserInfoVO userInfoVO = BeanUtil.copyProperties(userRegisterDTO, UserInfoVO.class);
         UserAuth userAuth = BeanUtil.copyProperties(userRegisterDTO, UserAuth.class);
         userInfoVO.setId(userId);
         userInfoVO.setOnLine(1);
+        userInfoVO.setAvatar(avatar);
         userAuth.setUserId(userId);
+        userAuth.setAvatar(avatar);
         userMapper.insertUserAuth(userAuth);
         log.info("主要用户信息：{}", userAuth);
         // 生成并存储用户登录信息在redis中
@@ -190,7 +211,7 @@ public class UserServiceImpl implements UserService {
         response.setHeader("Authorization", "Bearer " + tokenResult.getAccessToken());
         response.setHeader("refreshtoken", tokenResult.getRefreshToken());
 
-        return userId;
+        return userAuth;
     }
 
     /**

@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import com.zzzlew.zzzimserver.mapper.ApplyMapper;
 import com.zzzlew.zzzimserver.mapper.ConversationMapper;
 import com.zzzlew.zzzimserver.mapper.FriendMapper;
+import com.zzzlew.zzzimserver.mapper.GroupConversationMapper;
 import com.zzzlew.zzzimserver.pojo.dto.apply.DealApplyDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.DealGroupDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.GroupApplyDTO;
@@ -12,12 +13,16 @@ import com.zzzlew.zzzimserver.pojo.dto.conversation.GroupConversationDTO;
 import com.zzzlew.zzzimserver.pojo.dto.user.GroupMemberDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.ApplyVO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
+import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
+import com.zzzlew.zzzimserver.properties.MinIOConfigProperties;
 import com.zzzlew.zzzimserver.server.ApplyService;
+import com.zzzlew.zzzimserver.utils.MinIOFileStorgeUtil;
 import com.zzzlew.zzzimserver.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,6 +43,12 @@ public class ApplyServiceImpl implements ApplyService {
     private FriendMapper friendMapper;
     @Resource
     private ConversationMapper conversationMapper;
+    @Resource
+    private GroupConversationMapper groupConversationMapper;
+    @Resource
+    private MinIOFileStorgeUtil minIOFileStorgeUtil;
+    @Resource
+    private MinIOConfigProperties minIOConfigProperties;
 
     @Override
     public Long sendApply(SendApplyDTO sendApplyDTO) {
@@ -80,9 +91,9 @@ public class ApplyServiceImpl implements ApplyService {
                 : String.format("%d_%d", fromUserId, toUserId);
 
             // 插入会话表
-            conversationMapper.insertConversation(conversationId, toUserId, fromUserId, 0);
+            conversationMapper.insertConversation(conversationId, toUserId, fromUserId.toString(), 0);
 
-            conversationMapper.insertConversation(conversationId, fromUserId, toUserId, 0);
+            conversationMapper.insertConversation(conversationId, fromUserId, toUserId.toString(), 0);
 
             // 插入好友关系表
             friendMapper.addFriendToRelation(toUserId, fromUserId);
@@ -98,37 +109,52 @@ public class ApplyServiceImpl implements ApplyService {
      */
     @Transactional
     @Override
-    public String createGroupConversation(List<Long> friendIdList, GroupApplyDTO groupApplyDTO) {
-        // 获得当前登录用户id
-        Long userId = UserHolder.getUser().getId();
-        // 获得用户头像
-        String avatar = UserHolder.getUser().getAvatar();
-        groupApplyDTO.setUserAvatar(avatar);
-        // 发送群聊申请之后，就直接创建群聊的会话表
+    public ConversationVO createGroupConversation(List<Long> friendIdList, GroupApplyDTO groupApplyDTO,
+        MultipartFile groupAvatarFile) {
+        // 生成群聊的唯一id
         long snowflakeId = IdUtil.getSnowflakeNextId();
         String conversationId = "g_" + snowflakeId;
+        // 获得当前登录用户id
+        Long userId = UserHolder.getUser().getId();
+
+        // 生成群聊头像的远端存储路径
+        String avatarName = conversationId + ".png";
+        String minioGroupAvatarPath = conversationId + "/" + avatarName;
+        // 上传用户头像到minio服务端
+        minIOFileStorgeUtil.uploadAvatar(minioGroupAvatarPath, groupAvatarFile);
+        // 生成本地存储远程路径
+        String groupAvatar = minIOConfigProperties.getEndpoint() + "/" + minIOConfigProperties.getAvatarBucket() + "/"
+            + minioGroupAvatarPath;
+
+        groupApplyDTO.setUserAvatar(groupAvatar);
+
         groupApplyDTO.setConversationId(conversationId);
-        // 插入群聊表
+        // 插入群聊申请表
         applyMapper.sendGroupApply(userId, friendIdList, groupApplyDTO);
 
         // 插入群聊会话表
         GroupConversationDTO groupConversationDTO = new GroupConversationDTO();
         groupConversationDTO.setId(conversationId);
         groupConversationDTO.setGroupName(groupApplyDTO.getGroupName());
-        // TODO 这里就先不使用头像了吧，群聊头像的设计还没想好
-        groupConversationDTO.setGroupAvatar("E:\\JavaWeb\\zzz-IM-web\\image\\group.jpg");
+        groupConversationDTO.setGroupAvatar(groupAvatar);
         groupConversationDTO.setOwnerId(userId);
 
-        conversationMapper.insertGroupConversation(groupConversationDTO);
+        groupConversationMapper.insertGroupConversation(groupConversationDTO);
 
         // 插入群成员表
         GroupMemberDTO groupMemberDTO = new GroupMemberDTO();
         groupMemberDTO.setGroupId(conversationId);
         groupMemberDTO.setUserId(userId);
         groupMemberDTO.setRole(2);
-        applyMapper.insertGroupMember(groupMemberDTO);
+        groupConversationMapper.insertGroupMember(groupMemberDTO);
 
-        return conversationId;
+        // 插入会话表
+        conversationMapper.insertConversation(conversationId, userId, conversationId, 1);
+
+        ConversationVO conversationVO = ConversationVO.builder().id(conversationId).avatar(groupAvatar)
+            .name(groupApplyDTO.getGroupName()).userId(userId).targetId(conversationId).type(1).build();
+
+        return conversationVO;
     }
 
     @Override
@@ -143,20 +169,32 @@ public class ApplyServiceImpl implements ApplyService {
 
     @Transactional
     @Override
-    public void dealGroupApply(DealGroupDTO dealGroupDTO) {
+    public void dealGroupApply(DealGroupDTO dealGroupDTO, MultipartFile groupAvatarBlob) {
         // 获得当前登录用户id
         Long userId = UserHolder.getUser().getId();
+        String conversationId = dealGroupDTO.getConversationId();
+
+        // 生成群聊头像的远端存储路径
+        String avatarName = conversationId + ".png";
+        String minioGroupAvatarPath = conversationId + "/" + avatarName;
+        // 上传用户头像到minio服务端
+        minIOFileStorgeUtil.uploadAvatar(minioGroupAvatarPath, groupAvatarBlob);
+        // 生成本地存储远程路径
+        String groupAvatar = minIOConfigProperties.getEndpoint() + "/" + minIOConfigProperties.getAvatarBucket() + "/"
+            + minioGroupAvatarPath;
+        dealGroupDTO.setUserAvatar(groupAvatar);
         // 修改群聊申请状态
         applyMapper.dealGroupApply(dealGroupDTO);
+        // 更新群会话的头像
         if (dealGroupDTO.getStatus() == 2) {
             // 同意入群申请，需要插入群成员表
             GroupMemberDTO groupMemberDTO = new GroupMemberDTO();
-            groupMemberDTO.setGroupId(dealGroupDTO.getConversationId());
+            groupMemberDTO.setGroupId(conversationId);
             groupMemberDTO.setUserId(dealGroupDTO.getMemberId());
             groupMemberDTO.setRole(0);
-            applyMapper.insertGroupMember(groupMemberDTO);
-            // 更新群聊会话表的群成员数量
-            conversationMapper.updateGroupMemberCount(dealGroupDTO.getConversationId());
+            groupConversationMapper.insertGroupMember(groupMemberDTO);
+            // 更新群聊会话表的群成员数量和头像
+            groupConversationMapper.updateGroupMemberCount(conversationId, groupAvatar);
         } else {
             log.info("用户id：{}拒绝入群申请", userId);
         }

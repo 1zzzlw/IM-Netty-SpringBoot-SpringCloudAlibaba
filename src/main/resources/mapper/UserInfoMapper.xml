@@ -2,10 +2,11 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.zzzlew.zzzimserver.mapper.UserInfoMapper">
-    <insert id="insertUserInfo" useGeneratedKeys="true" keyProperty="id">
-        insert into user_info (username, account, password, email, phone, gender, avatar,
+    <insert id="insertUserInfo">
+        insert into user_info (id, username, account, password, email, phone, gender, avatar,
                                birthday, address)
-        values (#{username}, #{account}, #{password}, #{email}, #{phone}, #{gender}, #{avatar},
+        values (#{id}, #{username}, #{account}, #{password}, #{email}, #{phone}, #{gender},
+                #{avatar},
                 #{birthday}, #{address})
     </insert>
 

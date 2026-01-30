@@ -1,13 +1,20 @@
 package com.zzzlew.zzzimserver.controller;
 
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.zzzlew.zzzimserver.pojo.dto.user.UserRegisterDTO;
+import com.zzzlew.zzzimserver.pojo.entity.UserAuth;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,10 +40,11 @@ public class UserController {
      */
     @Operation(summary = "用户注册")
     @PostMapping("/register")
-    public Result<Long> register(@RequestBody UserRegisterDTO userRegisterDTO, HttpServletResponse response) {
-        log.info("注册用户信息为 {}", userRegisterDTO);
-        Long userId = userService.register(userRegisterDTO, response);
-        return Result.success(userId);
+    public Result<UserAuth> register(UserRegisterDTO userRegisterDTO,
+        @RequestParam(value = "avatarFile") MultipartFile avatarFile, HttpServletResponse response) {
+        log.info("注册用户信息为 {}，头像信息为 {}", userRegisterDTO, avatarFile);
+        UserAuth userAuth = userService.register(userRegisterDTO, avatarFile, response);
+        return Result.success(userAuth);
     }
 
     /**

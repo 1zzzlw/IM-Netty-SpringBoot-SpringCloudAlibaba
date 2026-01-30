@@ -25,9 +25,14 @@ public class DealGroupDTO {
      */
     private Long memberId;
 
-     /**
-      * 入群状态
-      */
+    /**
+     * 入群状态
+     */
     private Integer status;
+
+    /**
+     * 群头像
+     */
+    private String userAvatar;
 
 }

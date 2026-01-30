@@ -48,6 +48,27 @@ public class MinIOFileStorgeUtil {
         return stringBuilder.toString();
     }
 
+    // 上传用户头像到minio
+    public void uploadAvatar(String minioUserAvatarPath, MultipartFile avatarBlob) {
+        try {
+            // 根据分块文件的流存入minio
+            PutObjectArgs putObjectArgs = PutObjectArgs.builder()
+                // 存储桶名称
+                .bucket(minIOConfigProperties.getAvatarBucket())
+                // 存入minio的路径对象
+                .object(minioUserAvatarPath)
+                // 输入流
+                .stream(avatarBlob.getInputStream(), avatarBlob.getSize(), -1)
+                // 内容类型
+                .contentType(avatarBlob.getContentType()).build();
+            // 上传文件分块到minio
+            minioClient.putObject(putObjectArgs);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("上传文件出错,bucket:{}错误信息:{}", minIOConfigProperties.getAvatarBucket(), e.getMessage());
+        }
+    }
+
     // 上传文件分块到minio
     public void uploadFileChunk(String minioFileChunkPath, MultipartFile chunkBlob, Integer fileType) {
         try {

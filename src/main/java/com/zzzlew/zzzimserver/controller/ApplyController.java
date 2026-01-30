@@ -1,8 +1,12 @@
 package com.zzzlew.zzzimserver.controller;
 
 import com.zzzlew.zzzimserver.pojo.dto.apply.DealApplyDTO;
+import com.zzzlew.zzzimserver.pojo.dto.apply.DealGroupDTO;
+import com.zzzlew.zzzimserver.pojo.dto.apply.GroupApplyDTO;
 import com.zzzlew.zzzimserver.pojo.dto.apply.SendApplyDTO;
 import com.zzzlew.zzzimserver.pojo.vo.apply.ApplyVO;
+import com.zzzlew.zzzimserver.pojo.vo.apply.GroupApplyVO;
+import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
 import com.zzzlew.zzzimserver.result.Result;
 import com.zzzlew.zzzimserver.server.ApplyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 /**
@@ -41,7 +47,25 @@ public class ApplyController {
     }
 
     /**
-     * 获取好友申请发送历史
+     * 创建群聊
+     *
+     * @param groupApplyDTO 群聊申请信息
+     * @param groupAvatar 群聊头像文件信息
+     * @return 创建的会话信息
+     */
+    @Operation(summary = "创建群聊")
+    @PostMapping("/create")
+    public Result<ConversationVO> createGroupConversation(GroupApplyDTO groupApplyDTO,
+        @RequestParam(value = "groupAvatar") MultipartFile groupAvatar) {
+        log.info("创建群聊：{}，群聊名称：{}", groupApplyDTO.getInvitedIds(), groupApplyDTO.getGroupName());
+        List<Long> friendIdList = groupApplyDTO.getInvitedIds();
+        log.info("好友ID列表：{}", friendIdList);
+        ConversationVO conversationVO = applyService.createGroupConversation(friendIdList, groupApplyDTO, groupAvatar);
+        return Result.success(conversationVO);
+    }
+
+    /**
+     * TODO 获取好友申请发送历史
      * 
      * @return 好友申请发送历史
      */
@@ -64,6 +88,18 @@ public class ApplyController {
     }
 
     /**
+     * 获取群聊申请列表
+     *
+     * @return 群聊申请列表
+     */
+    @Operation(summary = "获取群聊申请列表")
+    @GetMapping("/groupApplyList")
+    public Result<List<GroupApplyVO>> getGroupApplyList() {
+        List<GroupApplyVO> groupApplyVOList = applyService.getGroupApplyList();
+        return Result.success(groupApplyVOList);
+    }
+
+    /**
      * 处理好友申请
      * 
      * @param dealApplyDTO 好友申请处理信息
@@ -73,6 +109,20 @@ public class ApplyController {
     public Result<Object> dealApply(@RequestBody DealApplyDTO dealApplyDTO) {
         log.info("处理好友申请，申请信息为：{}", dealApplyDTO);
         applyService.dealApply(dealApplyDTO);
+        return Result.success();
+    }
+
+    /**
+     * 同意入群申请
+     *
+     * @param dealGroupDTO 入群申请处理信息
+     */
+    @Operation(summary = "同意入群申请")
+    @PostMapping("/groupApply/deal")
+    public Result<Object> dealGroupApply(DealGroupDTO dealGroupDTO,
+        @RequestParam(value = "groupAvatarBlob") MultipartFile groupAvatarBlob) {
+        log.info("处理群聊申请：{}", dealGroupDTO);
+        applyService.dealGroupApply(dealGroupDTO, groupAvatarBlob);
         return Result.success();
     }
 

@@ -33,6 +33,11 @@ public class MinIOConfigProperties implements Serializable {
     private String secretKey;
 
     /**
+     * 存储用户头像桶的名称
+     */
+    private String avatarBucket;
+
+    /**
      * 存储照片桶的名称
      */
     private String imageBucket;

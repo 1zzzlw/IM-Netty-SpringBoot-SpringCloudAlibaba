@@ -1,6 +1,5 @@
 package com.zzzlew.zzzimserver.mapper;
 
-import com.zzzlew.zzzimserver.pojo.dto.conversation.GroupConversationDTO;
 import com.zzzlew.zzzimserver.pojo.entity.Conversation;
 import com.zzzlew.zzzimserver.pojo.vo.user.GroupMemberVO;
 
@@ -33,20 +32,6 @@ public interface ConversationMapper {
     void updateConversationStatus(String conversationId, String content, LocalDateTime sendTime, Long receiverId);
 
     /**
-     * 插入群聊会话
-     *
-     * @param groupConversationDTO 群聊会话信息
-     */
-    void insertGroupConversation(GroupConversationDTO groupConversationDTO);
-
-    /**
-     * 更新群聊会话的群成员数量
-     *
-     * @param conversationId 群聊会话ID
-     */
-    void updateGroupMemberCount(String conversationId);
-
-    /**
      * 查询群聊成员列表
      *
      * @param conversationId 群聊会话ID
@@ -61,6 +46,6 @@ public interface ConversationMapper {
      * @param toUserId  接收方用户ID
      * @param fromUserId 发送方用户ID
      */
-    void insertConversation(String conversationId, Long toUserId, Long fromUserId, Integer type);
+    void insertConversation(String conversationId, Long toUserId, String fromUserId, Integer type);
 
 }

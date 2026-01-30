@@ -1,5 +1,7 @@
 package com.zzzlew.zzzimserver.mapper;
 
+import com.zzzlew.zzzimserver.pojo.dto.conversation.GroupConversationDTO;
+import com.zzzlew.zzzimserver.pojo.dto.user.GroupMemberDTO;
 import com.zzzlew.zzzimserver.pojo.entity.GroupConversation;
 
 import java.time.LocalDateTime;
@@ -12,6 +14,28 @@ import java.util.List;
  * @version: 1.0
  */
 public interface GroupConversationMapper {
+
+    /**
+     * 插入群聊会话
+     *
+     * @param groupConversationDTO 群聊会话信息
+     */
+    void insertGroupConversation(GroupConversationDTO groupConversationDTO);
+
+    /**
+     * 插入群成员
+     *
+     * @param groupMemberDTO 群成员信息
+     */
+    void insertGroupMember(GroupMemberDTO groupMemberDTO);
+
+    /**
+     * 更新群聊会话的群成员数量
+     *
+     * @param conversationId 群聊会话ID
+     * @param groupAvatar 群聊会话头像
+     */
+    void updateGroupMemberCount(String conversationId, String groupAvatar);
 
     /**
      * 更新群聊会话状态
