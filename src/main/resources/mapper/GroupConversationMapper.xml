@@ -15,11 +15,19 @@
         values (#{groupId}, #{userId}, #{role})
     </insert>
 
-    <update id="updateGroupMemberCount">
+    <update id="updateGroupConversation">
         update group_conversation
-        set member_count = member_count + 1, group_avatar = #{groupAvatar}
+        set member_count = member_count + 1,
+        group_avatar = #{groupAvatar}
         where id = #{conversationId}
     </update>
+
+    <select id="selectGroupConversation"
+            resultType="com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO">
+        select group_name as name, group_avatar as avatar
+        from group_conversation
+        where id = #{conversationId}
+    </select>
 
     <update id="updateConversationStatus">
         UPDATE group_member
@@ -42,4 +50,5 @@
             #{groupId}
         </foreach>
     </select>
+
 </mapper>

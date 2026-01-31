@@ -106,10 +106,10 @@ public class ApplyController {
      */
     @Operation(summary = "处理好友申请")
     @PostMapping("/deal")
-    public Result<Object> dealApply(@RequestBody DealApplyDTO dealApplyDTO) {
+    public Result<String> dealApply(@RequestBody DealApplyDTO dealApplyDTO) {
         log.info("处理好友申请，申请信息为：{}", dealApplyDTO);
-        applyService.dealApply(dealApplyDTO);
-        return Result.success();
+        String conversationId = applyService.dealApply(dealApplyDTO);
+        return Result.success(conversationId);
     }
 
     /**
@@ -119,11 +119,11 @@ public class ApplyController {
      */
     @Operation(summary = "同意入群申请")
     @PostMapping("/groupApply/deal")
-    public Result<Object> dealGroupApply(DealGroupDTO dealGroupDTO,
+    public Result<ConversationVO> dealGroupApply(DealGroupDTO dealGroupDTO,
         @RequestParam(value = "groupAvatarBlob") MultipartFile groupAvatarBlob) {
         log.info("处理群聊申请：{}", dealGroupDTO);
-        applyService.dealGroupApply(dealGroupDTO, groupAvatarBlob);
-        return Result.success();
+        ConversationVO conversationVO = applyService.dealGroupApply(dealGroupDTO, groupAvatarBlob);
+        return Result.success(conversationVO);
     }
 
 }

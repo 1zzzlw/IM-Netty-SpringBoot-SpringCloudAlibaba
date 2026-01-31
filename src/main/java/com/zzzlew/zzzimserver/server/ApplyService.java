@@ -38,7 +38,7 @@ public interface ApplyService {
      * 
      * @param dealApplyDTO 好友申请信息
      */
-    void dealApply(DealApplyDTO dealApplyDTO);
+    String dealApply(DealApplyDTO dealApplyDTO);
 
     /**
      * 发送群聊申请
@@ -60,6 +60,6 @@ public interface ApplyService {
       *
       * @param dealGroupDTO 群聊申请处理信息
       */
-    void dealGroupApply(DealGroupDTO dealGroupDTO, MultipartFile groupAvatarBlob);
+     ConversationVO dealGroupApply(DealGroupDTO dealGroupDTO, MultipartFile groupAvatarBlob);
 
 }

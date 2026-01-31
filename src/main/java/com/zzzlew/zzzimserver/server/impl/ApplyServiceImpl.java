@@ -74,7 +74,7 @@ public class ApplyServiceImpl implements ApplyService {
 
     @Transactional
     @Override
-    public void dealApply(DealApplyDTO dealApplyDTO) {
+    public String dealApply(DealApplyDTO dealApplyDTO) {
         LocalDateTime dealTime = LocalDateTime.now();
         dealApplyDTO.setDealTime(dealTime);
         applyMapper.dealApply(dealApplyDTO);
@@ -98,7 +98,9 @@ public class ApplyServiceImpl implements ApplyService {
             // 插入好友关系表
             friendMapper.addFriendToRelation(toUserId, fromUserId);
             friendMapper.addFriendToRelation(fromUserId, toUserId);
+            return conversationId;
         }
+        return null;
     }
 
     /**
@@ -169,7 +171,7 @@ public class ApplyServiceImpl implements ApplyService {
 
     @Transactional
     @Override
-    public void dealGroupApply(DealGroupDTO dealGroupDTO, MultipartFile groupAvatarBlob) {
+    public ConversationVO dealGroupApply(DealGroupDTO dealGroupDTO, MultipartFile groupAvatarBlob) {
         // 获得当前登录用户id
         Long userId = UserHolder.getUser().getId();
         String conversationId = dealGroupDTO.getConversationId();
@@ -194,9 +196,17 @@ public class ApplyServiceImpl implements ApplyService {
             groupMemberDTO.setRole(0);
             groupConversationMapper.insertGroupMember(groupMemberDTO);
             // 更新群聊会话表的群成员数量和头像
-            groupConversationMapper.updateGroupMemberCount(conversationId, groupAvatar);
+            groupConversationMapper.updateGroupConversation(conversationId, groupAvatar);
+            // 查询群会话列表
+            ConversationVO conversationVO = groupConversationMapper.selectGroupConversation(conversationId);
+            conversationVO.setId(conversationId);
+            conversationVO.setTargetId(conversationId);
+            conversationVO.setUserId(userId);
+            conversationVO.setType(1);
+            return conversationVO;
         } else {
             log.info("用户id：{}拒绝入群申请", userId);
+            return null;
         }
     }
 

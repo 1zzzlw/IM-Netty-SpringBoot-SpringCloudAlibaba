@@ -3,6 +3,7 @@ package com.zzzlew.zzzimserver.mapper;
 import com.zzzlew.zzzimserver.pojo.dto.conversation.GroupConversationDTO;
 import com.zzzlew.zzzimserver.pojo.dto.user.GroupMemberDTO;
 import com.zzzlew.zzzimserver.pojo.entity.GroupConversation;
+import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,7 +36,7 @@ public interface GroupConversationMapper {
      * @param conversationId 群聊会话ID
      * @param groupAvatar 群聊会话头像
      */
-    void updateGroupMemberCount(String conversationId, String groupAvatar);
+    void updateGroupConversation(String conversationId, String groupAvatar);
 
     /**
      * 更新群聊会话状态
@@ -54,5 +55,8 @@ public interface GroupConversationMapper {
      * @return 群聊会话列表
      */
     List<GroupConversation> selectGroupConversationListByConversationIdList(List<String> groupIdList);
+
+
+    ConversationVO selectGroupConversation(String conversationId);
 
 }
