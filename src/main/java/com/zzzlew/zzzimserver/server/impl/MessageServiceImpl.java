@@ -126,9 +126,6 @@ public class MessageServiceImpl implements MessageService {
         messageDTO.setSendTime(null);
         String conversationId = messageDTO.getConversationId();
 
-        MessageVO messageVO = BeanUtil.copyProperties(messageDTO, MessageVO.class);
-        LocalDateTime sendTime = LocalDateTime.now();
-        messageVO.setSendTime(sendTime);
         Integer msgType = messageDTO.getMsgType();
 
         if (msgType != 1) {
@@ -140,55 +137,26 @@ public class MessageServiceImpl implements MessageService {
             messageDTO.setRemoteUrl(minioRemoteUrl);
         }
 
+        MessageVO messageVO = BeanUtil.copyProperties(messageDTO, MessageVO.class);
+        LocalDateTime sendTime = LocalDateTime.now();
+        messageVO.setSendTime(sendTime);
+
         // 保存消息到数据库
         messageMapper.saveMessage(messageDTO);
 
         if (conversationId.startsWith("g_")) {
-            // 发送的会话是群聊会话
-            // 去掉前缀的操作在前端传递过来的时候就已经完成了
-            // String groupId = conversationId.substring(2);
-            // 群聊会话id转换为 Long 类型，用来做接收者id
-            // Long receiverId = Long.parseLong(groupId);
-            // messageDTO.setReceiverId(receiverId);
-
-            // messageDTO.setMsgType(1);
-            // messageVO = BeanUtil.copyProperties(messageDTO, MessageVO.class);
-            // LocalDateTime sendTime = LocalDateTime.now();
-            // messageVO.setSendTime(sendTime);
-            //
-            // // 保存消息到数据库
-            // messageMapper.saveMessage(messageDTO);
-
-            // 修改群聊会话列表中的状态，未读消息数量，最后一条消息时间，最后一条消息内容，以及显示状态。
-            groupConversationMapper.updateConversationStatus(conversationId, userId, messageDTO.getContent(), sendTime);
-
+            // 发送的会话是群聊会话，获得所有的群成员
+            List<String> receiverIds = groupConversationMapper.selectGroupNumber(conversationId);
+            // 根据群成员id修改对方的会话状态
+            conversationMapper.updateGroupConversationStatus(conversationId,
+                    messageDTO.getContent(), sendTime, receiverIds);
         } else {
-            // 发送的会话是私聊会话
-
-            // 这里前端其实已经传递过来的会话id，所以可以不需要重新构建
-            // Long receiverId = messageDTO.getReceiverId();
-
-            // String conversationId = userId > receiverId ? userId + "_" + receiverId : receiverId + "_" + userId;
-
-            // conversationId = userId > receiverId ? String.format("%d_%d", userId, receiverId)
-            // : String.format("%d_%d", receiverId, userId);
-
-            // messageDTO.setConversationId(conversationId);
-
-            // messageDTO.setMsgType(1);
-            //
-            // messageVO = BeanUtil.copyProperties(messageDTO, MessageVO.class);
-            // LocalDateTime sendTime = LocalDateTime.now();
-            // messageVO.setSendTime(sendTime);
-            //
-            // // 保存消息到数据库
-            // messageMapper.saveMessage(messageDTO);
-
-            // 修改私信会话列表中的状态，未读消息数量，最后一条消息时间，最后一条消息内容，以及显示状态。
-            Long receiverId = messageDTO.getReceiverId();
-
+            // 发送的会话是私聊会话，获得对方的id
+            String receiverId = messageDTO.getReceiverId();
+            // 根据对方的id修改对方的会话状态
             conversationMapper.updateConversationStatus(conversationId, messageDTO.getContent(), sendTime, receiverId);
         }
+
         log.info("回应的消息为：{}", messageVO);
         return messageVO;
     }

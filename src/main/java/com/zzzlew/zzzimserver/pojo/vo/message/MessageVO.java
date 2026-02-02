@@ -36,7 +36,7 @@ public class MessageVO implements Serializable {
     /**
      * 接收者id
      */
-    private Long receiverId;
+    private String receiverId;
 
     /**
      * 消息类型
@@ -73,6 +73,11 @@ public class MessageVO implements Serializable {
      * 引用消息id
      */
     private Long quoteMsgId;
+
+    /**
+     * 文件id
+     */
+    private String fileId;
 
     /**
      * 文件名

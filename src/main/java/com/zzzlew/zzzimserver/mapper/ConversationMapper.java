@@ -29,7 +29,17 @@ public interface ConversationMapper {
      * @param content 最后一条消息内容
      * @param sendTime 最后一条消息时间
      */
-    void updateConversationStatus(String conversationId, String content, LocalDateTime sendTime, Long receiverId);
+    void updateConversationStatus(String conversationId, String content, LocalDateTime sendTime, String receiverId);
+
+    /**
+     * 更新群会话状态
+     *
+     * @param conversationId 会话id
+     * @param content 最后一条消息内容
+     * @param sendTime 最后一条消息时间
+     */
+    void updateGroupConversationStatus(String conversationId, String content,
+                                       LocalDateTime sendTime, List<String> receiverIds);
 
     /**
      * 查询群聊成员列表
@@ -39,13 +49,11 @@ public interface ConversationMapper {
      */
     List<GroupMemberVO> selectGroupMemberListByConversationId(String conversationId);
 
-
     /**
      * 初始化好友会话
      *
-     * @param toUserId  接收方用户ID
+     * @param toUserId 接收方用户ID
      * @param fromUserId 发送方用户ID
      */
     void insertConversation(String conversationId, Long toUserId, String fromUserId, Integer type);
-
 }

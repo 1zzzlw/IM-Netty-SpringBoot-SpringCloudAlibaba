@@ -5,7 +5,6 @@ import com.zzzlew.zzzimserver.pojo.dto.user.GroupMemberDTO;
 import com.zzzlew.zzzimserver.pojo.entity.GroupConversation;
 import com.zzzlew.zzzimserver.pojo.vo.conversation.ConversationVO;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -39,16 +38,6 @@ public interface GroupConversationMapper {
     void updateGroupConversation(String conversationId, String groupAvatar);
 
     /**
-     * 更新群聊会话状态
-     *
-     * @param conversationId 群聊会话ID
-     * @param userId 用户ID
-     * @param content 最后一条消息内容
-     * @param sendTime 最后一条消息时间
-     */
-    void updateConversationStatus(String conversationId, Long userId, String content, LocalDateTime sendTime);
-
-    /**
      * 根据群聊会话ID列表查询群聊会话列表
      *
      * @param groupIdList 群聊会话ID列表
@@ -56,7 +45,19 @@ public interface GroupConversationMapper {
      */
     List<GroupConversation> selectGroupConversationListByConversationIdList(List<String> groupIdList);
 
-
+    /**
+     * 根据群id查群群会话信息
+     *
+     * @param conversationId 群聊会话ID
+     * @return 群聊会话信息
+     */
     ConversationVO selectGroupConversation(String conversationId);
 
+    /**
+     * 根据群id查询群成员id列表
+     *
+     * @param conversationId 群聊会话ID
+     * @return 群成员id集合
+     */
+    List<String> selectGroupNumber(String conversationId);
 }

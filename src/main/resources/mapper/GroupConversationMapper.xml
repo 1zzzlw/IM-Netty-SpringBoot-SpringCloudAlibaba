@@ -18,7 +18,7 @@
     <update id="updateGroupConversation">
         update group_conversation
         set member_count = member_count + 1,
-        group_avatar = #{groupAvatar}
+            group_avatar = #{groupAvatar}
         where id = #{conversationId}
     </update>
 
@@ -29,18 +29,6 @@
         where id = #{conversationId}
     </select>
 
-    <update id="updateConversationStatus">
-        UPDATE group_member
-        SET latest_msg_time = #{sendTime},
-            latest_msg      = #{content},
-            status          = 1,
-            unread_count    = CASE
-                                  WHEN user_id != #{userId} THEN unread_count + 1
-                                  ELSE unread_count
-                END
-        WHERE group_id = #{conversationId};
-    </update>
-
     <select id="selectGroupConversationListByConversationIdList"
             resultType="com.zzzlew.zzzimserver.pojo.entity.GroupConversation">
         select id, group_name, group_avatar, member_count
@@ -49,6 +37,13 @@
         <foreach collection="groupIdList" item="groupId" open="(" close=")" separator=",">
             #{groupId}
         </foreach>
+    </select>
+
+    <select id="selectGroupNumber" resultType="java.lang.String"
+            parameterType="java.lang.String">
+        select user_id
+        from group_member
+        where group_id = #{conversationId}
     </select>
 
 </mapper>

@@ -197,6 +197,8 @@ public class ApplyServiceImpl implements ApplyService {
             groupConversationMapper.insertGroupMember(groupMemberDTO);
             // 更新群聊会话表的群成员数量和头像
             groupConversationMapper.updateGroupConversation(conversationId, groupAvatar);
+            // 插入会话列表
+            conversationMapper.insertConversation(conversationId, userId, conversationId, 1);
             // 查询群会话列表
             ConversationVO conversationVO = groupConversationMapper.selectGroupConversation(conversationId);
             conversationVO.setId(conversationId);

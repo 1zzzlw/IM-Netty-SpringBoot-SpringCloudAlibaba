@@ -22,7 +22,7 @@ public class MessageDTO implements Serializable {
     /**
      * 接收者id
      */
-    private Long receiverId;
+    private String receiverId;
 
     /**
      * 会话id

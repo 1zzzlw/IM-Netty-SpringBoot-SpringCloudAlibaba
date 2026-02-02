@@ -1,6 +1,7 @@
 package com.zzzlew.zzzimserver.handler.messageHandler;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.IdUtil;
 import com.zzzlew.zzzimserver.pojo.dto.message.GroupChatRequestDTO;
 import com.zzzlew.zzzimserver.pojo.vo.message.GroupChatResponseVO;
 import com.zzzlew.zzzimserver.utils.ChannelManageUtil;
@@ -28,29 +29,33 @@ public class GroupChatHandler extends SimpleChannelInboundHandler<GroupChatReque
         log.info("收到群聊消息: {}", groupChatRequestDTO);
         // 获得当前登录用户id
         Long userId = ChannelManageUtil.getUser(ctx.channel()).getId();
+        // 后端重新生成雪花id
+        groupChatRequestDTO.setId(IdUtil.getSnowflakeNextId());
         groupChatRequestDTO.setSenderId(userId);
-        // 设置消息类型为1消息
-        // groupChatRequestDTO.setMsgType(1);
+        // 重置发送时间，数据库可以自动填充
+        groupChatRequestDTO.setSendTime(null);
         // 获得接收者id列表
         List<Long> receiverIds = groupChatRequestDTO.getReceiverIds();
+        String receiverId = groupChatRequestDTO.getReceiverId();
         LocalDateTime sendTime = LocalDateTime.now();
+        GroupChatResponseVO groupChatResponseVO =
+            BeanUtil.copyProperties(groupChatRequestDTO, GroupChatResponseVO.class);
+        groupChatResponseVO.setReceiverId(receiverId);
+        groupChatResponseVO.setSendTime(sendTime);
+        log.info("群聊回应的消息为: {}", groupChatResponseVO);
         // 遍历接收者id列表
-        for (Long receiverId : receiverIds) {
-            if (receiverId.equals(userId)) {
+        for (Long receiver : receiverIds) {
+            if (receiver.equals(userId)) {
                 continue;
             }
             // 拿到接收者的channel
-            Channel channel = ChannelManageUtil.getChannel(receiverId);
+            Channel channel = ChannelManageUtil.getChannel(receiver);
             if (channel != null) {
-                GroupChatResponseVO groupChatResponseVO =
-                    BeanUtil.copyProperties(groupChatRequestDTO, GroupChatResponseVO.class);
-                groupChatResponseVO.setReceiverId(receiverId);
-                groupChatResponseVO.setSendTime(sendTime);
                 // 发送消息
                 channel.writeAndFlush(groupChatResponseVO);
-                log.info("向用户{}发送群聊消息: {}", receiverId, groupChatResponseVO);
+                log.info("向用户{}发送群聊消息: {}", receiver, groupChatResponseVO);
             } else {
-                log.warn("用户{}的channel不存在", receiverId);
+                log.warn("用户{}的channel不存在", receiver);
             }
         }
     }

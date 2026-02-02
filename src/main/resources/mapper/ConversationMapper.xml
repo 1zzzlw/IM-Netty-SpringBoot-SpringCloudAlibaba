@@ -23,11 +23,30 @@
         set latest_msg      = #{content},
             latest_msg_time = #{sendTime},
             status          = 1,
-            unread_count    = CASE
-                                  WHEN user_id = #{receiverId}
-                                      THEN unread_count + 1
-                                  ELSE unread_count
-                END
+            unread_count    = case
+                -- 对方的消息数量加1，发送者的消息数量还是原来的
+                                  when user_id = #{receiverId}
+                                      then unread_count + 1
+                                  else unread_count
+                end
+        where id = #{conversationId}
+    </update>
+
+    <update id="updateGroupConversationStatus">
+        update conversation
+        set latest_msg = #{content},
+        latest_msg_time = #{sendTime},
+        status = 1,
+        unread_count =
+        case
+        when user_id in
+        <foreach collection="receiverIds" item="receiverId" open="(" close=")"
+                 separator=",">
+            #{receiverId}
+        </foreach>
+        then unread_count + 1
+        else unread_count
+        end
         where id = #{conversationId}
     </update>
 
